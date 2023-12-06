@@ -1,2 +1,2 @@
-# eb-app-1
-Elastic Beanstalk sample application
+# Include various devops project
+
