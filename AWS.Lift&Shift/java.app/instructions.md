@@ -2,7 +2,7 @@
 - prerequisite:
 - Region: us-east-1 (North Virginia) 
 - Go to Certificate Manager 
-Request Certificate (Public Certificate), name it *.example.com, DNS Validation, give tag name:domain name 
+Request Certificate (Public Certificate), name it *.example.com, DNS Validation, give tag name:domain name.  
 Add CNAME name without domain part including . and value without . at the end to registrar(ex:go daddy), verify certificate on AWS CM issued or not  
 1. Key Pairs
 - Name:vprofile-prod-key 
@@ -11,16 +11,16 @@ Add CNAME name without domain part including . and value without . at the end to
 inbound: HTTP and HTTPS source-anywhere
 - vprofile-app-sg 
 inbound:
-8080 from vprofile-ELB-SG 
-22 from My IP (TroubleShouting purpose) 
-8080 from My IP (TroubleShouting purpose) 
+8080 from vprofile-ELB-SG  
+22 from My IP (TroubleShouting purpose)  
+8080 from My IP (TroubleShouting purpose)  
 - vprofile-backend-SG 
 inbound: 
-Mysql(3306) from vprofile-app-sg 
-11211(memcache) from vprofile-app-sg 
-5672 (rabbitmq) from vprofile-app-sg 
-All Traffic from vprofile-backend-SG(itself)
-22 from My IP (TroubleShouting purpose)
+Mysql(3306) from vprofile-app-sg  
+11211(memcache) from vprofile-app-sg  
+5672 (rabbitmq) from vprofile-app-sg  
+All Traffic from vprofile-backend-SG(itself)  
+22 from My IP (TroubleShouting purpose)  
 3. Instances with user data
 - On host: clone repo: https://github.com/hkhcoder/vprofile-project.git 
 Change branch to aws-LiftAndShift. Use script under userdate for each app.
@@ -36,7 +36,7 @@ userdata: use rabbitmq.sh, Launch Instance
 instance type: t2micro, key pair: vprofile-prod-key, security groups: vprofile-app-sg,
 userdata: use tomcat_ubuntu.sh, Launch Instance
 - verify all instances with ssh. Use `centos` user for CentOS instances.
-- vprofile-db01
+- vprofile-db01  
 `sudo -i`  
 `systemctl status mariadb`  
 `curl -I https://www.google.com`  
@@ -44,23 +44,23 @@ userdata: use tomcat_ubuntu.sh, Launch Instance
 `mysql -u admin -padmin123 accounts`  
 `show tables;`  
 `quit`  
-- vprofile-mc01 
+- vprofile-mc01   
 `sudo -i`  
 `systemctl status memcached`  
 `ps -ef | grep memcache`  
 `ss -tunlp`  
 `ss -tunlp | grep 11211`  
-- vprofile-rmq01
+- vprofile-rmq01  
 `sudo -i`  
 `systemctl status rabbitmq-server`  
-- vprofile-app01 
-use `ubuntu` user for shh 
+- vprofile-app01  
+use `ubuntu` user for shh  
 `sudo -i`  
 `systemctl status tomcat9`  
 `ls /var/lib/tomcat9/webapps`  
 4. Update Ip to name mapping in Route 53
 -  Route 53 ==> create hosted zone ==> vprofile.in ==> Private hosted zone ==> select region and vpc ==> create hosted zone
-- Create Record ==> Simple Routing ==> Define Simple Record ==> db01 ==> privete ip ==> Define Simple Record
+- Create Record ==> Simple Routing ==> Define Simple Record ==> db01 ==> private ip ==> Define Simple Record
 - create record for mc01 and rmq01 
 5. Build application
 - goto project directory update application.properties file(src/main/resources/). db01 to db01.vprofile.in, mc01 to mc01.vprofile.in, rmq01 to rmq01.vprofile.in 
@@ -80,9 +80,11 @@ start tomcat9 service. check the artifact extracted or not: `ls /var/lib/tomcat9
 9. Map ELB Endpoint to website name in Godaddy DNS
 - Copy ELB Endpoint (DNS name) and CNAME record on registrar(go daddy), Host:vprofileapp, Points to:paste ELB Endpoint.
 10. Verify
-- open browser hhtps://vprofileapp<domain name>
+- open browser https://vprofileapp.domain name
 11. Auto Scaling
 - Create Ami: ec2 console select app01 instance ==> actions ==> image ==> create image ==> name:vprofile-app-image ==> create image.   
 - Launch Configuration for Auto Scaling group: Create Launch Configuration ==> name:vprofile-app-LC ==> select ami ==> instance type:t2micro ==> iam role: vprofile-artifact-role ==> enable EC2 detailed monitoring within CloudWatch ==> sg: vprofile-app-sg ==> add key pair ==> create Launch Configuration.
 - Create Auto Scaling Group: name:vprofile-app-ASG ==> select launch configuration ==> select vpc and all the subnet ==> enable load balancing select target group ==> check health check ELB ==> capasity : 1 - 1 - 4 ==> Target tracking Scaling Policy ==> add notification ==> tag:name:vprofile-app ==> create auto scaling group
 - terminate vprofile-app01 instances. Check target group 
+12. Verify
+- open browser https://vprofileapp.domain name
