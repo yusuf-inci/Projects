@@ -37,27 +37,27 @@ instance type: t2micro, key pair: vprofile-prod-key, security groups: vprofile-a
 userdata: use tomcat_ubuntu.sh, Launch Instance
 - verify all instances with ssh. Use `centos` user for CentOS instances.
 - vprofile-db01
-`sudo -i` 
-`systemctl status mariadb` 
-`curl -I https://www.google.com` 
-`curl http://169.254.169.254/latest/user-data`
-`mysql -u admin -padmin123 accounts` 
-`show tables;`
-`quit` 
+`sudo -i`  
+`systemctl status mariadb`  
+`curl -I https://www.google.com`  
+`curl http://169.254.169.254/latest/user-data`  
+`mysql -u admin -padmin123 accounts`  
+`show tables;`  
+`quit`  
 - vprofile-mc01 
-`sudo -i` 
-`systemctl status memcached`
-`ps -ef | grep memcache` 
-`ss -tunlp` 
-`ss -tunlp | grep 11211`
+`sudo -i`  
+`systemctl status memcached`  
+`ps -ef | grep memcache`  
+`ss -tunlp`  
+`ss -tunlp | grep 11211`  
 - vprofile-rmq01
-`sudo -i` 
-`systemctl status rabbitmq-server`
+`sudo -i`  
+`systemctl status rabbitmq-server`  
 - vprofile-app01 
 use `ubuntu` user for shh 
-`sudo -i`
-`systemctl status tomcat9`
-`ls /var/lib/tomcat9/webapps`
+`sudo -i`  
+`systemctl status tomcat9`  
+`ls /var/lib/tomcat9/webapps`  
 4. Update Ip to name mapping in Route 53
 -  Route 53 ==> create hosted zone ==> vprofile.in ==> Private hosted zone ==> select region and vpc ==> create hosted zone
 - Create Record ==> Simple Routing ==> Define Simple Record ==> db01 ==> privete ip ==> Define Simple Record
@@ -66,12 +66,23 @@ use `ubuntu` user for shh
 - goto project directory update application.properties file(src/main/resources/). db01 to db01.vprofile.in, mc01 to mc01.vprofile.in, rmq01 to rmq01.vprofile.in 
 - open terminal on your host machine and goto directory where pom.xml stands. Run `mvn -version` be sure maven 3.9.2, java 11 and aws cli are installed. Run `mvn install`. Go to target folder and be sure artifact is ready.    
 6. Upload to S3 bucket
-Create a user named s3admin, attach AmazonS3FullAccess policy, create user. Create access key for this user. Configure your aws cli with this user. Create s3bucket `aws s3 mb s3://vpro-art<random number>` 
+Create a user named s3admin, attach AmazonS3FullAccess policy, create user. Create access key for this user. Configure your aws cli with this user. Create s3bucket `aws s3 mb s3://vpro-art<random number>`  
 Copy artifact to s3: `aws s3 cp target/vprofile-v2.war s3://<bucket name>`
 7. Download Artifact to Tomcat instance
 - In order to authenticate this instance with s3 use iam role. Go to console iam service and create role named vprofile-s3 with AmazonS3FullAccess policy. Attach this role to app01 instances. Actions ==> Security ==> Modify IAM Role ==> select  vprofile-s3 role  
 - ssh to vprofile-app01, install aws cli and copy artifact to here `aws s3 cp s3://<bucket name>/vprofile-v2.war /tmp/`
-- stop tomcat9 service, remove default app: `rm -rf /var/lib/tomcat9/ROOT` and copy artificat: `cp /tmp/vprofile-v2.war /var/lib/tomcat9/webapps/ROOT.war`, start tomcat9 service. check the artifact exracted or not: `ls /var/lib/tomcat9/webapps`, verify application properties filethat you edited: `cat /var/lib/tomcat0/webapps/ROOT/WEB-INF/classes/application.properties`  
+- stop tomcat9 service, remove default app: `rm -rf /var/lib/tomcat9/ROOT`,  
+copy artificat: `cp /tmp/vprofile-v2.war /var/lib/tomcat9/webapps/ROOT.war`,  
+start tomcat9 service. check the artifact extracted or not: `ls /var/lib/tomcat9/webapps`,  verify application properties filethat you edited: `cat /var/lib/tomcat0/webapps/ROOT/WEB-INF/classes/application.properties`  
 8. Setup ELB with HTTPS
+- Before to create application load balancer, create target group, Target group name: vprofile-app-TG, port 8080, healt check path:/login, Override:8080, healthty threshold:3, instance:tomcat app01, include as pending below, Create target group.
+- Create Load Balancer ==> ALB ==> name:vprofile-prod-elb ==> internet facing ==> select all zones, sg:ELB-sg ==> Listener :HTTP 80, HTTPS 443, Default Action: vprofile-app-TG ==> select certificate ==> create Load Balancer.
 9. Map ELB Endpoint to website name in Godaddy DNS
-10. Verify    
+- Copy ELB Endpoint (DNS name) and CNAME record on registrar(go daddy), Host:vprofileapp, Points to:paste ELB Endpoint.
+10. Verify
+- open browser hhtps://vprofileapp<domain name>
+11. Auto Scaling
+- Create Ami: ec2 console select app01 instance ==> actions ==> image ==> create image ==> name:vprofile-app-image ==> create image.   
+- Launch Configuration for Auto Scaling group: Create Launch Configuration ==> name:vprofile-app-LC ==> select ami ==> instance type:t2micro ==> iam role: vprofile-artifact-role ==> enable EC2 detailed monitoring within CloudWatch ==> sg: vprofile-app-sg ==> add key pair ==> create Launch Configuration.
+- Create Auto Scaling Group: name:vprofile-app-ASG ==> select launch configuration ==> select vpc and all the subnet ==> enable load balancing select target group ==> check health check ELB ==> capasity : 1 - 1 - 4 ==> Target tracking Scaling Policy ==> add notification ==> tag:name:vprofile-app ==> create auto scaling group
+- terminate vprofile-app01 instances. Check target group 
