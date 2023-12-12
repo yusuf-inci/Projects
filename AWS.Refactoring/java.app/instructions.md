@@ -34,10 +34,9 @@ Dashboard, Create Cluster, Create Memcached Cluster, name: vprofile-elascticcach
 3. Amazon Active MQ  
 Engine type: RabbitMQ, Single instance, name:vprofile-rmq, instance type:mq.t2.micro or mq.t3.micro, rabbit, Blue7890bunny, engine version: keep default or 3.10.20, Private Access, select sg, create.  
 - take a note
-note to RDS endpoint, username and password   
-note to Elastic Cache endpoint(remove port number at the end including colon: .), username and 
-password
-note to Active MQ endpoint(remove port number at the end including colon: .)(remove amqps:// part at the begining), username and password
+note to RDS endpoint, username and password  
+note to Elastic Cache endpoint(remove port number at the end including colon: .), username and password  
+note to Active MQ endpoint(remove port number at the end including colon: .)(remove amqps:// part at the begining), username and password  
 
 ## Launch Ec2 for DB Initializing
 1. Launch Ec2 for DB Initializing  
@@ -60,26 +59,29 @@ login rds again: `mysql -h rdsendpoint -u admin -ppassword accounts`
 ## Create Elastic Beanstalk Environment  
 - Create Role: AWS Service, EC2, policy name:`AWSElasticBeanstalkWebTier` `AdministratorAccess-AWSElasticBeanstalk` `AWSElasticBeanstalkRoleSNS` `AWSElasticBeanstalkCustomPlatformforEC2Role`, Role name:vprofile-bean-role, create role.  
 Note: if you see aws-elasticbeanstalk-service-role delete it.
-- Create application: Environment tier: Web Server environment, app name:vprofile-app, environment name: Vprofile-app-prod, Domain: vprofileapp55 (check availability), Platform: Tomcat, Platform branch: Tomcat 8.5 with Corretto 11 running on 64 bit Amazon Linuz 2, platform version:4.3.7, Presets:Custom Configuration, Service Access Service role:Create and use new service role: aws-elasticbeanstalk-service-role, key pair:vprofile-prod-key, EC2 instance profile:vprofile-bean-role, Public ip adress check Activated, select all subnet, Tags: name vproapp Project vprofile, if you get an error uncheck us-east-1e, auto scaling load balanced min:2 max:2, instance type keep just t3.micro, deployment policy: Rolling Percentage 50, Read documentation for detailed policy, create.     
+- Create application: Environment tier: Web Server environment, app name:vprofile-app, environment name: Vprofile-app-prod, Domain: vprofileapp55 (check availability), Platform: Tomcat, Platform branch: Tomcat 8.5 with Corretto 11 running on 64 bit Amazon Linuz 2, platform version:4.3.7, Presets:Custom Configuration, Service Access Service role:Create and use new service role: aws-elasticbeanstalk-service-role, key pair:vprofile-prod-key, EC2 instance profile:vprofile-bean-role, Public ip adress check Activated, select all subnet, Tags: name vproapp Project vprofile, if you get an error uncheck us-east-1e, auto scaling load balanced min:2 max:2, instance type keep just t3.micro, deployment policy: Rolling Percentage 50, Read documentation for detailed policy, create.  
+  
+## Post Configuration  
+- Enable ACL on S3 Bucket  
+Go to S3 bucket starting with elasticbeanstalk.... be sure the region is same, permissions, Object Ownership, Edit and check ACLs enabled radion button.     
+- Update Healthcheck on Beanstalk  
+On Beanstalk, goto your Environment, on left side click Configuration, Instance Trafffic and scaling click edit, Process, click default, action edit, Health check, Path /login, Sessions click Session stickiness Enabled, save.  
+- Add 443 http Listener to ELB  
+On Beanstalk, goto your Environment, on left side click Configuration, Listener, Add Listener, 443 HTTPS select certificate, add. ==> Apply  
+- Update Beanstalk SG  
+Grab Beanstalk instances security group ID, On Backend Securitiy Group (vprofile-backend-SG) inbound: add rule, All Traffic source --> Beanstalk instances security group ID  
+  
+## Build application
+- On host: clone repo: https://github.com/hkhcoder/vprofile-project.git, keep main branch or change branch to aws-refactor.  
+- goto project directory update application.properties file on src/main/resources/. db01 to 
+RDS endpoint, update username and password if needed, do same for mc01 and rmq01. For rmq port = 5671.  
+- open terminal on your host machine and goto directory where pom.xml stands. Run `mvn-version` be sure maven 3.9.2, java 11 and aws cli are installed. Run `mvn install`. Go to target folder and be sure artifact is ready.  
+- Deploy Application: Elastic Beanstalk, Environments, find your environment and select it, upload and deploy, choose artifact, change version to v2.5, Deploy.
+- Check app via browser.
+- to enable HTTPS add beanstalk endpoint to godaddy as cname name vprofile.  
+- Verify app via browser. `https://vprofile.devopstr.info`  
 
 
-## Update Backend SG
-1. Allow mysql-client-sg TCP 3306
-1. Allow Traffic from Bean SG
-2. Allow Internal Traffic
-
-
-
-
-## 
-
-2. Initialize RDS DB
-3. Update Healthcheck on Beanstalk
-4. Add 443 http Listener to ELB
-
-## Buil Artifact with Backend info
-## Deploy
-1. Deploy Artifact to Beanstalk
 2. Create CDN with SSL Certificate
 3. Update GoDaddy DNS Entry
 ## Verify
