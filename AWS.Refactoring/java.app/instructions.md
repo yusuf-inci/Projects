@@ -92,4 +92,4 @@ RDS endpoint, update username and password if needed, do same for mc01 and rmq01
 - RDS: Action delete uncheck create final snapshot, i acknowledge... , delete  
 - ElasticCache: Action delete  
 - AmazonMQ: delete  
-- Beanstalk: Action Terminate environment, 
+- Beanstalk: Action Terminate environment 
