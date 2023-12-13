@@ -58,7 +58,7 @@ login rds again: `mysql -h rdsendpoint -u admin -ppassword accounts`
 
 ## Create Elastic Beanstalk Environment  
 - Create Role: AWS Service, EC2, policy name:`AWSElasticBeanstalkWebTier` `AdministratorAccess-AWSElasticBeanstalk` `AWSElasticBeanstalkRoleSNS` `AWSElasticBeanstalkCustomPlatformforEC2Role`, Role name:vprofile-bean-role, create role.  
-Note: if you see aws-elasticbeanstalk-service-role delete it.
+Note: if you see `aws-elasticbeanstalk-service-role` delete it.
 - Create application: Environment tier: Web Server environment, app name:vprofile-app, environment name: Vprofile-app-prod, Domain: vprofileapp55 (check availability), Platform: Tomcat, Platform branch: Tomcat 8.5 with Corretto 11 running on 64 bit Amazon Linuz 2, platform version:4.3.7, Presets:Custom Configuration, Service Access Service role:Create and use new service role: aws-elasticbeanstalk-service-role, key pair:vprofile-prod-key, EC2 instance profile:vprofile-bean-role, Public ip adress check Activated, select all subnet, Tags: name vproapp Project vprofile, if you get an error uncheck us-east-1e, auto scaling load balanced min:2 max:2, instance type keep just t3.micro, deployment policy: Rolling Percentage 50, Read documentation for detailed policy, create.  
   
 ## Post Configuration  
