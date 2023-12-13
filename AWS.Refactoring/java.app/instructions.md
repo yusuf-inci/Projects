@@ -80,9 +80,16 @@ RDS endpoint, update username and password if needed, do same for mc01 and rmq01
 - Check app via browser.
 - to enable HTTPS add beanstalk endpoint to godaddy as cname name vprofile.  
 - Verify app via browser. `https://vprofile.devopstr.info`  
+  
+## Create CDN with SSL Certificate  
+- Create Cloudfront distribution, Origin: vprofile.devopstr.info, protocol: Match viewer, allowed HTTP methods select all get, head, options, put, ... , select SSL certificate, security policy: TLSv1, create distribution  
 
+## Verify  
+- Open different browser ex.firefox cognito mod, `https://vprofile.devopstr.info`, press F12 and refresh browser again, you should see cloudfront under Headers in via line. 
 
-2. Create CDN with SSL Certificate
-3. Update GoDaddy DNS Entry
-## Verify
-
+## Clean up
+- CloudFront: Disable, after disabled delete it.  
+- RDS: Action delete uncheck create final snapshot, i acknowledge... , delete  
+- ElasticCache: Action delete  
+- AmazonMQ: delete  
+- Beanstalk: Action Terminate environment, 
