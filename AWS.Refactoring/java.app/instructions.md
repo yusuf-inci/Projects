@@ -44,13 +44,13 @@ note to Active MQ endpoint(remove port number at the end including colon: .)(rem
 mysql-client-sg inbound ssh my ip 
 - update backend SG, inbound mysql-client-sg TCP 3306 
 - ssh to mysql-client instance install mysql client:  
-`sudo apt update && sudao apt update mysql-client -y`  
+`sudo apt update && sudo apt install mysql-client -y`  
 `mysql -h rdsendpoint -u admin -ppassword accounts`  
 `show tables;` and `exit`  
 back to bash and clone source code  
 repo: https://github.com/hkhcoder/vprofile-project.git  
-execute sql queries: `mysql -h rdsendpoint -u admin -ppassword accounts < src/main/resources/
-db_backup.sql`  
+`cd vprofile-project``  
+execute sql queries: `mysql -h rdsendpoint -u admin -ppassword accounts < src/main/resources/db_backup.sql`  
 login rds again: `mysql -h rdsendpoint -u admin -ppassword accounts`  
 `show tables;` and `exit`  
 - terminate mysql-client 
