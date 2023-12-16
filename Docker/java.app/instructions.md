@@ -10,3 +10,6 @@
 - create docker hub account and create three repositories  
 `vprofileapp`, `vprofiledb`, `vprofileweb`  
 - grab application source code, docker and docker compose template (empty files) from `https://github.com/devopshydclub/vprofile-project.git`
+
+- to remove stopped containers and related part
+`docker systemprune -a`
