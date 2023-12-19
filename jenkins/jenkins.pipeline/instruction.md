@@ -11,3 +11,9 @@ Launch instances with named JenkinsServer, ami ubuntu 20.04 LTS, type:t2.micro, 
 ## Sample Pipelne
 - Add required plugins: Manage Jenkins, Manage Plugins, `Pipeline Utility Steps`, `Pipeline Maven Integration`, install without restart.  
 - Dashboard, New item, name: sample-paac, Pipeline, OK, grab the code from code editor and paste it, save. Build Now.  
+
+
+## With Docker Agent
+- install `Docker` and `Docker Pipeline` plugin  
+- fix the permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: issues : `sudo usermod -a -G docker jenkins`, `grep docker /etc/group`, logout or rebbot.  
+- 
