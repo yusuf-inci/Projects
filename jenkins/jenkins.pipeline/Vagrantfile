@@ -1,0 +1,16 @@
+Vagrant.configure("2") do |config|
+  config.hostmanager.enabled = true 
+  config.hostmanager.manage_host = true
+       
+  config.vm.define "JenkinsServer" do |jenkinssrv|
+    jenkinssrv.vm.box = "ubuntu/jammy64"
+    jenkinssrv.vm.hostname = "jenkinssrv"
+    jenkinssrv.vm.network "private_network", ip: "192.168.35.36"
+    jenkinssrv.vm.network "public_network"
+    jenkinssrv.vm.provider "virtualbox" do |vb|
+      vb.memory = "8192"
+      vb.cpus = "6" # Set number of CPUs to 6
+    end
+    jenkinssrv.vm.provision "shell", path: "userdata/jenkins.install.sh"
+  end
+end
