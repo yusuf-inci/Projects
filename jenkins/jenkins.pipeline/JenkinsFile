@@ -3,8 +3,8 @@ pipeline{
     // agent any
     agent {
         docker { image 'maven:3.3.3'}
-        //docker { image 'node:16.13.1-alpine' }
     }
+    
     /*tools {
     maven "MAVEN3"
     jdk "OracleJDK8"
