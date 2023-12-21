@@ -29,6 +29,14 @@ name: NexusServer, image: in market use CentOS Stream 9 (login user:ec2-user not
 - Create ec2 for sonar:  
 name: SonarServer, image: ubuntu 22.04 LTS (free tier), instance type: t2.medium, key-pair: vprofile-ci-key, Security Group: sonar-SG, user data: sonar-setup.sh, Launch İnstance  
 ## Post Installation
+- JenkinsServer  
+ssh, check: `systemctl status jenkins`, `java --version`, home directory of jenkins: `ls /var/lib/jenkins`, java: `ls /usr/lib/jvm`  
+- connect jenkins via browser: `http://<public ip>:8080`, login jenkins and intall suggested plugin, intall following plugins: `maven integration`, `GitHub integration `, `Nexus Artifact Uploader`, `SonarQube Scanner`, `Slack Notification`, `Build Timestamp`, 
+- NexusServer  
+ssh, check: `systemctl status nexus`, connect via browser: `http://<public ip>:8081`, follow wizard disable anonymous access. Go to administrator/Repositories and create repositories: maven2 (hosted) name:vprofile-release, maven2 (proxy) name:vpro-maven-central remote storage url:https://repo1.maven.org/maven2/ , maven2 (hosted) name: vprofile-snapshot, version policy: Snapshot, maven2 (group) name:vpro-maven-group  add previously created repositories in it.  
+- SonarServer  
+connect via browser: `http://<public ip>`  
+
 ## Github Repository
 ## Build Job with Nexus Integration
 ## Github Webhook
