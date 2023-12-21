@@ -1,0 +1,61 @@
+# Vagrant configuration version
+Vagrant.configure("2") do |config|
+
+    # Enable and configure hostmanager plugin
+    config.hostmanager.enabled = true 
+    config.hostmanager.manage_host = true
+
+    # Define JenkinsC VM
+    config.vm.define "JenkinsC" do |jenkins|
+        # Set the box for JenkinsC VM
+        jenkins.vm.box = "ubuntu/jammy64"
+        # Set the hostname for JenkinsC VM
+        jenkins.vm.hostname = "JenkinsC"
+        # Configure a private network for JenkinsC VM with a static IP
+        jenkins.vm.network "private_network", ip: "192.168.40.11"
+        # Configure VirtualBox provider settings for JenkinsC VM
+        jenkins.vm.provider "virtualbox" do |vb|
+            vb.memory = "3072" # Set memory to 3 GB
+            vb.cpus = "3" # Set number of CPUs to 3
+        end
+        # Provision JenkinsC VM with a shell script
+        jenkins.vm.provision "shell", path: "userdata/jenkins-setup.sh"
+    end
+
+    # Define NexusServer VM
+    config.vm.define "NexusS" do |nexus|
+        # Set the box for NexusServer VM
+        nexus.vm.box = "eurolinux-vagrant/centos-stream-9"
+        # Set the hostname for NexusServer VM
+        nexus.vm.hostname = "NexusS"
+        nexus.vbguest.installer_options = { allow_kernel_upgrade: true }
+        # Configure a private network for NexusServer VM with a static IP
+        nexus.vm.network "private_network", ip: "192.168.40.21"
+        # Configure VirtualBox provider settings for NexusServer VM
+        nexus.vm.provider "virtualbox" do |vb|
+            vb.memory = "3072" # Set memory to 3 GB
+            vb.cpus = "3" # Set number of CPUs to 3
+        end
+        # Provision NexusServer VM with a shell script
+        nexus.vm.provision "shell", path: "userdata/nexus-setup.sh"
+    end
+
+
+    # Define SonarServer VM
+    config.vm.define "SonarS" do |sonar|
+        # Set the box for SonarServer VM
+        sonar.vm.box = "ubuntu/jammy64"
+        # Set the hostname for SonarServer VM
+        sonar.vm.hostname = "SonarS"
+        # Configure a private network for SonarServer VM with a static IP
+        sonar.vm.network "private_network", ip: "192.168.40.31"
+        # Configure VirtualBox provider settings for SonarServer VM
+        sonar.vm.provider "virtualbox" do |vb|
+            vb.memory = "3072" # Set memory to 3 GB
+            vb.cpus = "3" # Set number of CPUs to 3
+        end
+        # Provision SonarServer VM with a shell script
+        sonar.vm.provision "shell", path: "userdata/sonar-setup.sh"
+    end
+
+end
