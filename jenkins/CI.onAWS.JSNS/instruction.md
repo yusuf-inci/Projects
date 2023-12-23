@@ -67,6 +67,9 @@ content type: application/json, choose events you would like the trigger this we
 ## Sonarqube Integration  
 - In order to see test and checkstyle analysis human readable reports that we generate in our pipeline (surefire-reports and checkstyle-result.xml) we should integrate sonarqube server to jenkins.
 1. sonar scanner tool: Add tools to jenkins: Manage Jenkins, Global Tool Configurations, Add sonarqube scanner, name: sonarscanner, version:4.7.0.2747, save.   
-2. sonarqube server information that jenkins use to upload reports: configure system, SonarQube servers, check environmental variables, Add sonarqube, name:sonarserver, http://<private ip> save. goto sonar server generate token: Administrator, security, generate token and grab it. back to jenkins, configure system,  SonarQube servers, SonarQube installation, server authentication token, add , kind secret text, paste token, id:sonartoken, add, select token, save.   
+2. sonarqube server information that jenkins use to upload reports: configure system, SonarQube servers, check environmental variables, Add sonarqube, name:sonarserver, http://<private ip> save. goto sonar server generate token: Administrator, security, generate token and grab it. back to jenkins, configure system,  SonarQube servers, SonarQube installation, server authentication token, add , kind secret text, paste token, id:sonartoken, add, select token, save.  
+- update jenkins file add the code that upload all reports to sonarqube server.  
+- Create own quality gate: On sonarqube server, Quality gates, create, name:vprofileQG, save, add condition, on overall code, bugs, value:25, add condition. Go to projects, project setting quality gate, select  vprofileQG. Project setting, web hooks, create, name:jenkinswebhook, url:http://<private ip jenkins,>:8080/sonarqube-webhook, create. write quality gate stage in jenkins file, commit and push. jenkins job should failure due to quality gate, error message:ERROR: Pipeline aborted due to quality gate failure: ERROR
+check it and back to sonar and update condition value to 100, run pipeline again and it will be success.       
 ## Nexus Artifact Upload
 ## Slack Notification
