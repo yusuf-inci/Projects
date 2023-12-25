@@ -71,5 +71,14 @@ content type: application/json, choose events you would like the trigger this we
 - update jenkins file add the code that upload all reports to sonarqube server.  
 - Create own quality gate: On sonarqube server, Quality gates, create, name:vprofileQG, save, add condition, on overall code, bugs, value:25, add condition. Go to projects, project setting quality gate, select  vprofileQG. Project setting, web hooks, create, name:jenkinswebhook, url:http://<private ip jenkins,>:8080/sonarqube-webhook, create. write quality gate stage in jenkins file, commit and push. jenkins job should failure due to quality gate, error message:ERROR: Pipeline aborted due to quality gate failure: ERROR
 check it and back to sonar and update condition value to 100, run pipeline again and it will be success.       
-## Nexus Artifact Upload
-## Slack Notification
+
+## Nexus Artifact Upload  
+- before upload artifact to nexus we update its name (versioning). For this we use jenkins timestamp plugin. we have already install `Build Timestamp` plugin. Configure it. Manage jenkins, system, Build time stamp, pattern:`yy-MM-dd_HHmm`, save.
+- to upload artifact to nexus, we use jenkins `Nexus Artifact Uploader` plugin. we have already install it. Configure it. Manage jenkins, system, Build Timestamp, pattern:`yyyy-MM-dd HH:mm:ss`. update jenkinsfile add a stage `UploadArtifact`. commit push and test.  
+
+## Slack Notification  
+- create slack account,  
+- create workspace, name:vprofilecicd, team working on: devopscicd, give email address.  
+- add channel (like a group), create a new channel, name: jenkinscicd, create. google `add apps to slack`, click the link, search for jenkins click `Jenkins CI`,  click add to slack, choose channel:jenkinscicd, Add Jenkins CI integration, grap the token, save setting. 
+- integrate with jenkins: manage jenkins, system, Slack, workspace:`vprofilecicd`, Credential add, kind: secret text, secret: paste token, id: slacktoken, add. select slack token, Default channel id: jenkinscicd, test connection, save.  
+- update jenkinsfile to send notification pass or fail.   
