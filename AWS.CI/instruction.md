@@ -15,28 +15,54 @@ Region: us-east-1 (North Virginia)
 - Create codecommit repo:  
 Create repository, name: vprofile-code-repo, create.  
 - Create iam user with codecommit custom policies:  
-Create user, name: vprofile-code-admin, Attach policy, create ploicy, select codecommit, check All CodeCommit actions, Add ARNs, Resource in, check this account, region:us-east-1, repository name: vprofile-code-repo, add ARNs, next, policy name: vprofile-repo-fullAccess, create policy, back to iam policy tab and refresh, find your policy and check it, next, create user.  
+Create user, name: vprofile-code-admin, Attach policy, create policy, select codecommit, check All CodeCommit actions, Add ARNs, Resource in, check this account, region:us-east-1, repository name: vprofile-code-repo, add ARNs, next, policy name: vprofile-repo-fullAccess, create policy, back to iam policy tab and refresh, find your policy and check it, next, create user.  
 Goto newly created user and create access key, cli, download csv file. 
 Configure AWS CLI with this users crenditials,   
 - SSH auth to CodeCommit repo:  
-Generate ssh keys locally & Exchange keys with iam user: ssh-keygen, store and name it: ~/.ssh/vpro-codecommit_rsa, grab public key, Upload SSH public key to vprofile-code-admin user credentials, configure ~/.ssh/config with this user crenditials, you can grab template. `https://github.com/hkhcoder/vprofile-project` branch: ci-aws, `aws-files/ssh_config_file`, test it via `ssh git-codecommit.us-east-1.amazonaws.com`. Any error use debug mode with `ssh -v git-codecommit.us-east-1.amazonaws.com` then check the log and fix the error.  
+Generate ssh keys locally & Exchange keys with iam user: ssh-keygen, store and name it: ~/.ssh/vpro-codecommit_rsa, grab public key, Upload SSH public key to vprofile-code-admin user credentials, configure AWS CLI with this user `aws configure`, then configure ~/.ssh/config with this user crenditials, you can grab template. `https://github.com/hkhcoder/vprofile-project` branch: ci-aws, `aws-files/ssh_config_file`, test it via `ssh git-codecommit.us-east-1.amazonaws.com`. Any error use debug mode with `ssh -v git-codecommit.us-east-1.amazonaws.com` then check the log and fix the error.  
 - Migrate vprofile-project repo from github to codecommit repo:  
-Clone source code: `https://github.com/hkhcoder/vprofile-project.git`, change update remote origin to code commit url, `cat .git/config`, list all the remote branches: `git branch -a`, upload only ci-aws and cd-aws branch so checkout these branch to track remote branches: `git checkout ci-aws`, `git checkout cd-aws`, check it `git branch -a` you should see three branches.  
-if you want to track all the remote branches you ca use following commands: `git branch -a | grep remotes`, to ignore head `git branch -a | grep remotes | grep HEAD | cut -d / -f3 > /tmp/branches` (-f3 linenumber of HEAD), `for i in `cat /tmp/branches` ; do echo $i ; done`, git checkout in loop: `for i in `cat /tmp/branches` ; do git checkout $i ; done`. remove origin in git config: `git remote rm origin`, check: `cat .git/config`, add our url to origin: goto code commit and grab SSH clone url then `git remote add origin <paste url>`, check:`cat .git/config`, to push all the branches to codecommit repo: `git push origin --all`, goto codecommit repo and check the codes also branches.   
+Clone source code: `https://github.com/hkhcoder/vprofile-project.git`, update remote origin to code commit url, `cat .git/config`, list all the remote branches: `git branch -a`, upload only ci-aws and cd-aws branch so checkout these branch to track remote branches: `git checkout ci-aws`, `git checkout cd-aws`, check it `git branch -a` you should see three branches.  
+if you want to track all the remote branches you can use following commands: `git branch -a | grep remotes`, to ignore head `git branch -a | grep remotes | grep -v HEAD | cut -d / -f3 > /tmp/branches` (-f3 third field of HEAD), `for i in `cat /tmp/branches` ; do echo $i ; done`, git checkout in loop: `for i in `cat /tmp/branches` ; do git checkout $i ; done`. remove origin in git config: `git remote rm origin`, check: `cat .git/config`, add our url to origin: goto code commit and grab SSH clone url then `git remote add origin <paste url>`, check:`cat .git/config`, to push all the branches to codecommit repo: `git push origin --all`, goto codecommit repo and check the codes also branches.   
 
-## Code Artifact
-- Create an iam user with code artifact acces
+## Code Artifact  
+Used to store dependencies for the build tools like maven. ex: maven instead of downloading dependencies from the internet, it is going to download from AWS Code Artifact Repository. (like nexus).  
+- Create Code Artifact Repository:  
+Developer Tools ==> CodeArtifact ==> Create Repository, name: vprofile-maven-repo, Public upstream repository (where does code artifact get the dependencies) : maven-central-store, this account, domain name: devopstr, create repository.  
+Go to code artifact repositories, you will see two repo: maven-central-store and vprofile-maven-repo click maven-central-store, view connection instruction, mac-linux, mvn, pull from your repository examine here. we are going to use here as a reference.  
+
+
+--------------
+- Create an iam user with code artifact access
 - İnstall AWS CLI & Configure
 - Export auth token
 - Update setting.xml in source code 
-- Update pom.xml with repo details
+- Update pom.xml with repo details  
+---------------
 
 ## Sonar Cloud
 - Create sonar cloud account
-- Generate sonar token
-- Create SSM parameters with sonar details
-- Create Build project
-- Update code build role to access SSM parameter store
+- Generate sonar token:  
+Goto sonar cloud, my account, security, generate token, name: vpro-sonar-cloud, generate token, grab token. At the top right click plus symbol, Create new organization, create an organization manually, name: devopstrvpro, choose free plan, create organization. at the top-left click sonarcloud, analyze new project, create a project manually, select your organization, display name: devopstrvpro-repo, give same name to productkey, public, next, previous version, create project. Information section grab the project key, organization, url: https://sonarcloud.io.      
+- Create SSM parameters with sonar details (check and follow from sonar_buildspec.yml), we use here parameter store but keep in ming best way is to use secret manager.  
+Go to AWS System Manager, Parameter Store, Create, name: Organization, type string, value: get it from sonar cloud, create. name: HOST, type string, value: https://sonarcloud.io , create. name: Project, type string, value: project key get it from sonar cloud, create. name: LOGIN, type secure string, value: token we already grab from sonar cloud, create.   
+
+## Build Project  
+- Update pom.xml with repo details  
+Open your code that you have already clone, with your IDE, change branch to ci-aws, under aws-files 
+folder you see buildspec files which do the same job similiar to jenkinsfile.  
+In pom.xml at the bottom change repository url: Go to code artifact repositories, click maven-central-store, view connection instruction, mac-linux, mvn, step 5 grab url, paste it.  
+- Update setting.xml in source code  
+profile > repository > url: paste same url, mirrors>code artifact,domain name maven-central-store> url paste same url.
+- copy aws-files>sonar-buildspec.yml to project root folder where pom and setting.xml files stands. rename it just buildspec.yml.  
+- Go to code artifact repositories, click maven-central-store, view connection instruction, mac-linux, mvn, step 3 Export .... copy the code mean export command, buildspec.yml file line 15 under commands cp .. , paste here  
+save commit and push to AWS codeCommit repository.  
+Go to Aws code commit and check pom.xml, setting.xml and buildspec.yml files in ci-aws branch.  
+- Create Build project  
+goto Build CodeBuild, create project, name: vpro-code-analysis, select source code provider and repo, branch:ci-aws, Environment image:managed image, os:ubuntu, runtime:standard, image:aws..../standard:5.0, Rolename: update role name to find easily (we will add more permission to access parameter store to this role), use a buildspec file, Logs: check cloudwatch logs, group name:vprofile-northvir-codebuild, create build project. İt will fail because the service rule dont have access to parameter store vy default. So we need to set it up manually.  
+-  Update codebuild role to access SSMparameterstore: go to build project vpro-code-analysis project, edit,environment, copy the service role and give it to access parameters store permission. create policy, service:systems manager, list: check describe parameters, read: DescribeDocumentParameters, GetParameter, GetParameters, GetParameterHistory, GetParameterByPath, next policy name: vprofile-parameteresReadPermission, create. goto the role and attach the policy. attach another policy to the role, name: AWSCodeArtifactReadOnlyAccess. Start build. be sure to be success if it fail then fix it and start again.  
+Go to sonarcloud, your project, Main Branch check  
+
+------
 
 ## Create notifications for sns or slack
 
