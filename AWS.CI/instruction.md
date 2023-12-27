@@ -1,4 +1,5 @@
-# AWS Services
+# Continuous Integration on AWS
+## AWS Services
 - Code Commit 
 - Code Artifact (Maven Repository for Dependincies)
 - Code Build 
@@ -29,21 +30,19 @@ Used to store dependencies for the build tools like maven. ex: maven instead of 
 - Create Code Artifact Repository:  
 Developer Tools ==> CodeArtifact ==> Create Repository, name: vprofile-maven-repo, Public upstream repository (where does code artifact get the dependencies) : maven-central-store, this account, domain name: devopstr, create repository.  
 Go to code artifact repositories, you will see two repo: maven-central-store and vprofile-maven-repo click maven-central-store, view connection instruction, mac-linux, mvn, pull from your repository examine here. we are going to use here as a reference.  
-
-
 --------------
 - Create an iam user with code artifact access
 - İnstall AWS CLI & Configure
 - Export auth token
 - Update setting.xml in source code 
 - Update pom.xml with repo details  
----------------
+---------------  
 
 ## Sonar Cloud
 - Create sonar cloud account
 - Generate sonar token:  
-Goto sonar cloud, my account, security, generate token, name: vpro-sonar-cloud, generate token, grab token. At the top right click plus symbol, Create new organization, create an organization manually, name: devopstrvpro, choose free plan, create organization. at the top-left click sonarcloud, analyze new project, create a project manually, select your organization, display name: devopstrvpro-repo, give same name to productkey, public, next, previous version, create project. Information section grab the project key, organization, url: https://sonarcloud.io.      
-- Create SSM parameters with sonar details (check and follow from sonar_buildspec.yml), we use here parameter store but keep in ming best way is to use secret manager.  
+Goto sonar cloud, my account, security, generate token, name: vpro-sonar-cloud, generate token, grab token. At the top right click plus symbol, Create new organization, create an organization manually, name: devopstrvpro, choose free plan, create organization. at the top-left click sonarcloud, analyze new project, create a project manually, select your organization, display name: devopstrvpro-repo, give same name to projectkey, public, next, previous version, create project. Information section grab the project key, organization, url: https://sonarcloud.io.      
+- Create SSM parameters with sonar details (check and follow from sonar_buildspec.yml), we use here parameter store but keep in mind best way is to use secret manager.  
 Go to AWS System Manager, Parameter Store, Create, name: Organization, type string, value: get it from sonar cloud, create. name: HOST, type string, value: https://sonarcloud.io , create. name: Project, type string, value: project key get it from sonar cloud, create. name: LOGIN, type secure string, value: token we already grab from sonar cloud, create.   
 
 ## Build Project  
@@ -58,25 +57,35 @@ profile > repository > url: paste same url, mirrors>code artifact,domain name ma
 save commit and push to AWS codeCommit repository.  
 Go to Aws code commit and check pom.xml, setting.xml and buildspec.yml files in ci-aws branch.  
 - Create Build project  
-goto Build CodeBuild, create project, name: vpro-code-analysis, select source code provider and repo, branch:ci-aws, Environment image:managed image, os:ubuntu, runtime:standard, image:aws..../standard:5.0, Rolename: update role name to find easily (we will add more permission to access parameter store to this role), use a buildspec file, Logs: check cloudwatch logs, group name:vprofile-northvir-codebuild, create build project. İt will fail because the service rule dont have access to parameter store vy default. So we need to set it up manually.  
--  Update codebuild role to access SSMparameterstore: go to build project vpro-code-analysis project, edit,environment, copy the service role and give it to access parameters store permission. create policy, service:systems manager, list: check describe parameters, read: DescribeDocumentParameters, GetParameter, GetParameters, GetParameterHistory, GetParameterByPath, next policy name: vprofile-parameteresReadPermission, create. goto the role and attach the policy. attach another policy to the role, name: AWSCodeArtifactReadOnlyAccess. Start build. be sure to be success if it fail then fix it and start again.  
+goto Build CodeBuild, create project, name: vpro-code-analysis, select source code provider and repo, branch:ci-aws, Environment image:managed image, os:ubuntu, runtime:standard, image:aws..../standard:5.0, Rolename: update role name to find easily (we will add more permission to access parameter store to this role), use a buildspec file, Logs: check cloudwatch logs, group name:vprofile-northvir-codebuild, Stream name: sonarCodeAnalysis,  create build project. İt will fail because the service role dont have access to parameter store by default. So we need to set it up manually.  
+-  Update codebuild role to access SSMparameterstore: go to build project vpro-code-analysis project, edit,environment, copy the service role and give it to access parameters store permission. create policy, service:systems manager, list: check describe parameters, read: DescribeDocumentParameters, GetParameter, GetParameters, GetParameterHistory, GetParameterByPath, next policy name: vprofile-parameteresReadPermission, create. goto the role and attach the policy. attach another policy to the role, name: AWSCodeArtifactReadOnlyAccess. Start build. be sure to be success if it fail then fix it and start.  
 Go to sonarcloud, your project, Main Branch check  
 
-------
+## Build Artifact  
+- update build_buildspec.yml file:
+- Go to code artifact repositories, click maven-central-store, view connection instruction, mac-linux,
+mvn, step 3 Export .... copy the code mean export command, update build_buildspec.yml file line 11 under commands cp .. , paste here (export commands) 
+save commit and push to AWS codeCommit repository.
+- Go to existing project open in new tab keep it open and back existing tab, create build project, name: vprofile-Build-Artifact, select source code provider and repo, 
+branch:ci-aws, Environment image:managed image, os:ubuntu, runtime:standard, image:aws..../standard:5.0,
+Rolename: update role name to find easily (we will add more permission to access parameter store to this
+role), use a buildspec file, Buildspec name: aws-files/build_buildspec.yml Logs: check cloudwatch logs, group name:goto another tab and get the log group name we use previously (edit, logs, grab the log group name ), Stream name: BuildArtifact,  create build project. It will fail because the service role dont have access to parameter store by default. So we need to set it up manually.  
+- IAM, roles, find your role, click on that, add permission, attach policies, search artifact, select AWSCodeArtifactReadOnlyAcces, add permission. Start build. 
 
-## Create notifications for sns or slack
+## Create CodePipeline and Notifications for SNS
+- to store the artifact create s3 bucket,  
+name:vprofile55-build-artifact, select right region, create bucket.  
+- create folder to store artifact,  
+name:pipeline-artifacts, create folder. in the aws configuration it s called as key.
+- Create Notificaton go to sns,  
+create topic, type:standard, name: vprofile-pipeline-notifications, create,  
+create subscription, protocol: email, endpoint: give an email adress, create. confirm subscription through email.    
+- Pipeline CodePipeline, Create pipeline, name: vprofile-CI-Pipeline, add a number to service role, source: AWS Code commit, fill repo name, branch name, detection:cloudwatch, Build Provider: AWS CodeBuild, project name: select vprofile-build-artifact, deploy stage skip it for now, create pipeline. Stop execution.  
+- Edit pipeline, add stage after codecommit, name: CodeAnalysis, Add Action group for this stage, name:: SonarCodeAnalysis, provider:CodeBuild, select region, ınput artifact:SourceArtifact, project name:vpro-code-analysis, done. 
+- add stage after Build, name: Deploy, Add Action group for this stage, name: DeployToS3, provider:Amazon S3, selct region, ınput artifact: BuildArtifact, bucket: select your bucket, S3 Object key: Folder name you created, check extract before deploy, done.  
+- SAVE the pipeline. Go to Pipeline setting, Notifications, create notification rule, name: vpro-ci-notifications, detail type: full, select event in this case select all, choose target, submit.  
+- back to pipeline, Release change, check sonar cloud, s3 bucket etc.
 
-## Build Project 
-- Update pom.xml with artifact version with timestamp
-- Create variable in SSM ==> parameterstore
-- Create build Project
-- Update codebuild role to access SSMparameterstore
-
-## Create Pipeline
-- Code commit
-- Test code
-- Build
-- Deploy to S3 bucket
 
 # Test Pipeline
-
+- to test change readme.md, commit and push, check the result again.
