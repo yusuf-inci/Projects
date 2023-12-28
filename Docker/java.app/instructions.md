@@ -1,4 +1,5 @@
-# Instructions and Commands
+# Containerization of Java project with Docker
+## Instructions and Commands
 - prerequisite:  
 - Install Vagrant
 `curl -O https://releases.hashicorp.com/vagrant/2.2.9/vagrant_2.2.9_x86_64.deb`  

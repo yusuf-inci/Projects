@@ -1,4 +1,5 @@
-# Instructions and Commands
+# AWS Lift&Shift - Java Application 
+## Instructions and Commands
 - prerequisite:
 - Region: us-east-1 (North Virginia) 
 - Go to Certificate Manager 
