@@ -96,8 +96,13 @@ Deploy.
 - go to your repo and create new branch from `cicd-jenkins` branch for prod `git checkout -b prod` push (publish in IDE) go to ProdPipeline/Jenkinsfile, update jenkinsfile. Simply deploy to production environment  
 update cluster and service variables,  
 add Deploy to ECS Prod stage, Commit and Push,  
-- go to Jenkins and create vprofile-cicd-prod-pipeline, copy from  `vprofile-cicd-pipeline-docker`, change branch to `*/prod`, Path: ProdPipeline/Jenkinsfile, Save. 
+- go to Jenkins and create `vprofile-cicd-prod-pipeline`, copy from  `vprofile-cicd-pipeline-docker`, change branch to `*/prod`, Path: ProdPipeline/Jenkinsfile, Save. 
 - go to ECS, check clusters, service and wait for some time, make sure it is stable then got jenkins, test your pipeline, Build now.  
 - once it is finish check the logs. Check the ECS. 
 
-## In Real Time production Secanario
+## In Real Time Production Scenario
+- After staging environment get ready to pass the prod (once it approved) Staging code will be merged with prod code. (Both codes need to be similiar). In this case cicd-jenkins is staging code so merge cicd-jenkins to prod. `git checkout prod`, `git merge cicd-jenkins`, `git push origin prod`, As soon as the changes goes to the production branch, `vprofile-cicd-prod-pipeline` should get triggered. After some tests (smoke, sanity etc.), user request directed to production environment. Ofcourse it can be different organization to organization. Generally merge --> pull reguest --> approved --> pipeline gets triggered.  
+
+## Clean up
+- Delete ECS cluster. Before delete cluster, you should delete the service.(it also delete task) 
+- Terminate Jenkins, Nexus, Sonar Server. In this case just stop them.
