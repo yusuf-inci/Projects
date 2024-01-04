@@ -20,30 +20,37 @@ Create user, name: vprofile-code-admin, Attach policy, create policy, select cod
 Goto newly created user and create access key, cli, download csv file. 
 Configure AWS CLI with this users crenditials,   
 - SSH auth to CodeCommit repo:  
-Generate ssh keys locally & Exchange keys with iam user: ssh-keygen, store and name it: ~/.ssh/vpro-codecommit_rsa, grab public key, Upload SSH public key to vprofile-code-admin user credentials, configure AWS CLI with this user `aws configure`, then configure ~/.ssh/config with this user crenditials, you can grab template. `https://github.com/hkhcoder/vprofile-project` branch: ci-aws, `aws-files/ssh_config_file`, test it via `ssh git-codecommit.us-east-1.amazonaws.com`. Any error use debug mode with `ssh -v git-codecommit.us-east-1.amazonaws.com` then check the log and fix the error.  
+Generate ssh keys locally & Exchange keys with iam user: ssh-keygen, store and name it: ~/.ssh/vpro-codecommit_rsa, grab public key, Upload SSH public key to vprofile-code-admin user credentials,  create config file and configure it ~/.ssh/config with this user crenditials, you can grab template. `https://github.com/hkhcoder/vprofile-project` branch: ci-aws, `aws-files/ssh_config_file`, make sure permission `chmod 600 config`, test it via `ssh git-codecommit.us-east-1.amazonaws.com`. Any error use debug mode with `ssh -v git-codecommit.us-east-1.amazonaws.com` then check the log and fix the error.  
 - Migrate vprofile-project repo from github to codecommit repo:  
 Clone source code: `https://github.com/hkhcoder/vprofile-project.git`, update remote origin to code commit url, `cat .git/config`, list all the remote branches: `git branch -a`, upload only ci-aws and cd-aws branch so checkout these branch to track remote branches: `git checkout ci-aws`, `git checkout cd-aws`, check it `git branch -a` you should see three branches.  
-if you want to track all the remote branches you can use following commands: `git branch -a | grep remotes`, to ignore head `git branch -a | grep remotes | grep -v HEAD | cut -d / -f3 > /tmp/branches` (-f3 third field of HEAD), `for i in `cat /tmp/branches` ; do echo $i ; done`, git checkout in loop: `for i in `cat /tmp/branches` ; do git checkout $i ; done`. remove origin in git config: `git remote rm origin`, check: `cat .git/config`, add our url to origin: goto code commit and grab SSH clone url then `git remote add origin <paste url>`, check:`cat .git/config`, to push all the branches to codecommit repo: `git push origin --all`, goto codecommit repo and check the codes also branches.   
+if you want to track all the remote branches you can use following commands: `git branch -a | grep remotes`, to ignore head `git branch -a | grep remotes | grep -v HEAD | cut -d / -f3 > /tmp/branches` or `git branch -a | grep -v HEAD | cut -d / -f3 > | grep -v master /tmp/branches` (-f3 third field of HEAD), `for i in `cat /tmp/branches` ; do echo $i ; done`, git checkout in loop: `for i in `cat /tmp/branches` ; do git checkout $i ; done`. remove origin in git config: `git remote rm origin`, check: `cat .git/config`, add our url to origin: goto code commit and grab SSH clone url then `git remote add origin <paste url>`, check:`cat .git/config`, to push all the branches to codecommit repo: `git push origin --all`, goto codecommit repo and check the codes also branches.   
 
 ## Code Artifact  
 Used to store dependencies for the build tools like maven. ex: maven instead of downloading dependencies from the internet, it is going to download from AWS Code Artifact Repository. (like nexus).  
 - Create Code Artifact Repository:  
 Developer Tools ==> CodeArtifact ==> Create Repository, name: vprofile-maven-repo, Public upstream repository (where does code artifact get the dependencies) : maven-central-store, this account, domain name: devopstr, create repository.  
 Go to code artifact repositories, you will see two repo: maven-central-store and vprofile-maven-repo click maven-central-store, view connection instruction, mac-linux, mvn, pull from your repository examine here. we are going to use here as a reference.  
---------------
-- Create an iam user with code artifact access
-- İnstall AWS CLI & Configure
-- Export auth token
-- Update setting.xml in source code 
-- Update pom.xml with repo details  
----------------  
+- Create an iam user with code artifact access:  
+Create IAM user, name `vprofile-cart-admin`, policy: `AWSCodeArtifactAdminAccess`, Download Credentias. Install AWS CLI & Configure it with this user.
+- Export auth token: grab maven-central-store connection(step:3) Export commmand, `export CODEARTIFACT_AUTH_TOKEN=..........` and run it on terminal, see token `echo $CODEARTIFACT_AUTH_TOKEN`
+- Update setting.xml in source code: on terminal goto project directory branch:ci-aws, update setting.xml file,  
+repository url with maven-central-store connection setting.xml repository url(step:5),  
+domain name and url:  `<id>devopstr-maven-central-store</id>`, `<url>https://devopstr-...........d.codeartifact.us-east-1.amazonaws.com/maven/maven-central-store/</url>`, 
+- Update pom.xml with repo details: repositories url:`<url>https://devopstr-...........d.
+codeartifact.us-east-1.amazonaws.com/maven/maven-central-store/</url>`,  
+- commit and push to code commit repository.    
 
 ## Sonar Cloud
 - Create sonar cloud account
 - Generate sonar token:  
-Goto sonar cloud, my account, security, generate token, name: vpro-sonar-cloud, generate token, grab token. At the top right click plus symbol, Create new organization, create an organization manually, name: devopstrvpro, choose free plan, create organization. at the top-left click sonarcloud, analyze new project, create a project manually, select your organization, display name: devopstrvpro-repo, give same name to projectkey, public, next, previous version, create project. Information section grab the project key, organization, url: https://sonarcloud.io.      
+Goto sonar cloud, my account, security, generate token, name: vpro-sonar-cloud, generate token, grab token. At the top right click plus symbol, Create new organization, create an organization manually, name: devopstrvpro, choose free plan, create organization. at the top-left click sonarcloud, analyze new project, create a project manually, select your organization, display name: devopstrvpro-repo, give same name to projectkey(vprofile-repo), public, next, previous version, create project. Information section grab the project key, organization, url: https://sonarcloud.io.      
 - Create SSM parameters with sonar details (check and follow from sonar_buildspec.yml), we use here parameter store but keep in mind best way is to use secret manager.  
-Go to AWS System Manager, Parameter Store, Create, name: Organization, type string, value: get it from sonar cloud, create. name: HOST, type string, value: https://sonarcloud.io , create. name: Project, type string, value: project key get it from sonar cloud, create. name: LOGIN, type secure string, value: token we already grab from sonar cloud, create.   
+Go to AWS System Manager, Parameter Store, Create,  
+1. name: Organization, type string, value: get it from sonar cloud, create. 
+2. name: HOST, type string, value: https://sonarcloud.io , create.  
+3. name: Project, type string, value: project key get it from sonar cloud, create.  
+4. name: LOGIN or sonartoken, type secure string, value: token we already grab from sonar cloud, create.  
+5. name: codeartifact-token, type secure string, value: get it from this `echo $CODEARTIFACT_AUTH_TOKEN` create. 
 
 ## Build Project  
 - Update pom.xml with repo details  
@@ -76,7 +83,7 @@ role), use a buildspec file, Buildspec name: aws-files/build_buildspec.yml Logs:
 - to store the artifact create s3 bucket,  
 name:vprofile55-build-artifact, select right region, create bucket.  
 - create folder to store artifact,  
-name:pipeline-artifacts, create folder. in the aws configuration it s called as key.
+name:pipeline-artifacts, create folder. (in the aws configuration it s called as key.)
 - Create Notificaton go to sns,  
 create topic, type:standard, name: vprofile-pipeline-notifications, create,  
 create subscription, protocol: email, endpoint: give an email adress, create. confirm subscription through email.    
