@@ -1,5 +1,4 @@
 # Continuous Integration on AWS
-
 ## AWS Services
 - Code Commit 
 - Code Artifact (Maven Repository for Dependincies)
@@ -97,4 +96,27 @@ create subscription, protocol: email, endpoint: give an email adress, create. co
 
 # Test Pipeline
 - to test change readme.md, commit and push, check the result again.
+
+# Continuous Delivery on AWS
+
+
+## Create Elastic Beanstalk Environment  
+- Create application: app name:vprofile-app, Platform: Tomcat, Platform branch: 
+Tomcat 8.5 with Corretto 11 running on 64 bit Amazon Linuz 2, platform version:4.1.1, Sample application, Configure more options,  
+capacity ==> ASG: auto scaling load balanced min:2 max:4, instance type keep just t2.micro, save  
+security ==> select key pair (ci-vprofile-key), save  
+Tags ==> Project vprofile, save, Create app  
+
+
+## Create RDS
+- Create Database  
+Databases, Create Database, standard, engine MySQL, engine version:MySQL 5.6.34, template: free tier, Single DB Instance, name:vprofile-cicd-mysql, master username:admin, 
+select auto generate a password, instance configuration: Burstable classes select db.t2.micro if not available db.t3.micro, public access No, create security group name:- 
+vprofile-cicd-rds-mysql-sg, Additional setting: Initial database name:accounts create database. view credential details store them.  
+
+##  SecGrp & DB Initialization
+- Go to instances, grab beanstalk environment instances security group ids and go to rds security group, add inbound rule: type:MYSQL(3306), source:beanstalk environment 
+instances security group ids.
+- 
+- ssh to beanstalk user: ec2-user, 
 
