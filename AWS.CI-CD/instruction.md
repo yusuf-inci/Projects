@@ -115,8 +115,54 @@ select auto generate a password, instance configuration: Burstable classes selec
 vprofile-cicd-rds-mysql-sg, Additional setting: Initial database name:accounts create database. view credential details store them.  
 
 ##  SecGrp & DB Initialization
-- Go to instances, grab beanstalk environment instances security group ids and go to rds security group, add inbound rule: type:MYSQL(3306), source:beanstalk environment 
-instances security group ids.
-- 
-- ssh to beanstalk user: ec2-user, 
+- Go to instances, grab beanstalk environment instances security group ids and go to rds security group, add inbound rule: type:MYSQL(3306), source:beanstalk environment instances security group ids.
+- update beanstalk environment instances security group ssh --> my ip  
+- In order to make DB Initialization use beanstalk as a jump, this is not the right way but in this case we use beanstalk instance to connect to ids. Best practises use seperate instances like bastion host.  
+- ssh to beanstalk user: ec2-user, install mysql client and git, test connection to rds, `mysql -h <RDS endpoint> -u <username> -p<password>`, `show databases;`, back to bash and clone source code `git clone https://github.com/devopshydclub/vprofile-project.git`, checkout cd-aws, go to src/main/resources, run `mysql -h <RDS endpoint> -u <username> -p<password> account < db_backup.sql`, login and check once again, `mysql -h <RDS endpoint> -u <username> -p<password>`, `use accounts;`, `show tables;` check schema.  
+- Update beanstalk environment health check, add /login  
+
+## Update pom.xml & setting.xml
+- code commit repo branch cd-aws
+- Update pom.xml with repo details, in ci-aws branch grab repo url and paste it, commit  
+- Update setting.xml, in ci-aws branch grab everything and paste it, commit  
+
+## Build project Build and Release 
+- goto Build CodeBuild, you have two project, you use them on ci part now change their branch to cd-aws.  
+- Create another Build project which will build the artifact and deploy it to beanstalk, create project, name: `vprofile28-BuildandRelease`, select source code provider and repo, branch:cd-aws, Environment image:managed image, os:ubuntu, runtime:standard, image:aws..../standard:3.0, now you can use existing role you created which have permission to ssm parameter, existing role, grab role name and paste it, insert buildspec commands (grab it from repo, branch: cd-aws, under aws-files, buildandRelease_buildspec.yml), Logs: check cloudwatch logs, group name: vprofile-cicd-codebuild-logs, Stream 
+name: Build&ReleaseJob,  create build project.  
+- generate code artifact token again, update parameter store ()codeartifacttoken with new token.  
+- create DRS-Endpoint, RDSUSER and RDSPASS parameter.  
+
+## Build project Software Testing
+- you need s3 bucket so create s3 bucket name it `vprofile-cicd-test-output-devopstr55`
+- Create project, name: SoftwareTesting, select source code provider and repo, branch:seleniumAutoScripts, Environment image:managed image, os:Windows Server 2019, runtime:Base, image:aws..../windows-base:2019-1.0, now you can use existing role you created which have permission to ssm parameter, existing role, grab role name and paste it, insert buildspec commands (grab it from repo, branch: cd-aws, under aws-files, win_buildspecyml),update url with Beanstalk `VprofileApp-env` url in this file, Artifact, Amazon S3, Bucket name: `vprofile-cicd-test-output-devopstr55` check Enable semantic versioning, check zip,  Logs: check cloudwatch logs, group name: vprofile-cicd-codebuild-logs, Stream name: SoftwareTestLogs,  create build project.  
+
+## Create CodePipeline 
+- You can create new pipeline or update existing pipeline   
+- Pipeline CodePipeline, Pipelines, Create pipeline, vprofile-cicd-pipeline, new service role, add a number to service role, source: AWS Code commit, fill repo name, branch: cd-aws, detection:cloudwatch, Build Provider: AWS CodeBuild, project name: select `vprofile28-BuildandRelease`, deploy provider: beanstalk ......... , create pipeline. Stop execution.  
+- Edit pipeline, add stage after codecommit, name: CodeAnalysis, Add Action group for this stage, name:
+CodeAnalysis, provider:CodeBuild, select region, ınput artifact:SourceArtifact, project 
+name:vprofile-Build, done.
+- add stage after CodeAnalysis, name: BuildAndStore, Add Action group for this stage, name: BuildAndStore, provider:Amazon CodeBuild, select region, ınput artifact: SourceArtifact, project name: `vprofile-Build-Artifact`, OutputArtifact: BuildArtifact, done.  
+- add stage after BuildAndStore, name: DeployToS3, Add Action group for this stage, name: 
+DeployToS3, provider:Amazon S3, select region, ınput artifact: BuildArtifact, bucket name: 
+`vprofile-artifact-storage`, check extract before deploy, done. 
+- Edit Build stage, Output artifacts: BuildArtifactToBean, Done.    
+- Edit Deploy stage, Input artifacts: BuildArtifactToBean, Done.
+- add stage after Deploy, name: SoftwareTesting, Add Action group for this stage, name: 
+SoftwareTesting, provider:Amazon CodeBuild, select region, ınput artifact: SourceArtifact, project name: 
+`SoftwareTesting`, done. Save Pipeline.
+- Go to Pipeline, Notify, manage notification rule, create notification rule name: vprofile-aws-cicd-pipeline-notification, detail type: full, select event in this case select all, choose target: vprofile-pipeline-notification , submit.
+- go to beanstalk environment, VprofileApp-env, configuration, Load balancer, edit, Processes, actions, edit, sessions, check stickness policy enabled, save, apply
+- back to pipeline, Release change, Release, 
+
+## Validate and Clean up
+1. Validate
+- go to beanstalk environment, check app. version, back beanstalk app and click url, check, login app,
+- go to software testing check the output, go to s3, vprofile-cicd-testoutput bucket, download xip file and open it, under ScrnSht directory you shoul see the image.  
+2. Clean up
+- ElasticBeanStalk  
+app configuration capacity edit, load balancer instances min: 0 max: 0, Apply.  
+- RDS  
+Delete it, uncheck final snapshot, Delete.  
 
