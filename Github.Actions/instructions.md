@@ -94,9 +94,13 @@ get the Docker Registry URL. `REGISTRY`
 - check security groups Edit inbound rule. add 3306 is allowed from The Service Security Group. This will allow our service to connect to on port 3306.
 - hit load balancer URL to browser, you should see the app.
 
-
-
-
+## Deploy  
+- the next job in our workflow will be to deploy our image. needs the capability to deploy the new image tag, or any image with any tag and the container information or the image information on the service is provided by the task definition. We will have this task definition in Json format in our source code and in the job, we will update
+the task definition to the new tag and push this new task definition to ECS service. ECS service will detect that and make the changes fresh. Image tag it will pull from the ECR. So we have the Docker image on AWS ECR. create a new job, which is going to deploy the new task definition on ECS cluster, which we have already created. We have the load balancer. The task definition will have information of the new tag, which it will fetch from the ECR. And our container also has the access to the Amazon RDS. We already tested this from the URL, we are able to log in to our app container, our application which is running on the container.
+- get the task definition file which is in Json format. go to task definitions. Click on your task definition. Revision. Json option. Click on that. copy it to the clipboard. Go to your VS code. and paste it inside to task definition file. 
+- create a new job, Deploy, run it on ubuntu. step check out the source code. go to market place find Amazon ECS "Deploy Task Definition" Action for GitHub Actions use it as a template and update main.yml commit and push. Run workflow. check the deploy. Deploy Amazon ECS. Task definition. etc.
+- update workflow run method both manually and push event. test it.
+- conclusion: First we did the GitHub setup. We created a workflow a sample workflow. Then we included the testing job in that where we test the source code by using sonar scanner and sonar cloud. We created the second job which builds the Docker image and uploads to AWS, ECR. And before that we did a lot of AWS setup creating IAM user, creating ECR repository, creating RDS. Then we created the ECS cluster Task definition service. We tested our application. Then we mentioned the stage or job in the workflow to deploy the latest tag by using task definition on the ECS cluster. 
 
 ## Clean Up
 RDS
@@ -104,5 +108,6 @@ RDS
 ECS
 - delete service
 - delete cluster
-
+- delete the user that we created 
+- remove the images.
 
