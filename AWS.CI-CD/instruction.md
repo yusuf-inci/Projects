@@ -1,4 +1,5 @@
-# Continuous Integration on AWS
+# Continuous Integration & Continuous Deliveryon on AWS
+
 ## AWS Services
 - Code Commit 
 - Code Artifact (Maven Repository for Dependincies)
