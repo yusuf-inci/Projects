@@ -55,3 +55,5 @@ buildNumber.properties
 # Ignore all .txt files except requirement.txt
 *.txt
 !requirements.txt
+# ignore
+vprofile-project

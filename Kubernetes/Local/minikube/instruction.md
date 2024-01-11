@@ -1,0 +1,5 @@
+
+
+
+
+`cat .kube/config`
