@@ -56,4 +56,4 @@ buildNumber.properties
 *.txt
 !requirements.txt
 # ignore
-vprofile-project
+Kubernetes/vprofile-project
