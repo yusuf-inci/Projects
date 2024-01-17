@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:       # pod definition
+    metadata:
+      labels:
+        app: vprodb   # pod will have this label
+    spec:             # specification about the pod
+      containers:
+        - name: vprodb
+          image: devopstr55/vprofiledb:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: vpro-db-data
+          # resources:
+            # limits:
+              # memory: "128Mi"
+              # cpu: "500m"
+          ports:
+            - name: vprodb-port
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: db-pass
+      volumes:
+        - name: vpro-db-data
+          hostPath:
+            path: /home/yu5uf/codes/Projects/Kubernetes/Local/minikube/mysql-data
+
+      initContainers: 
+        - name: busybox
+          image: busybox:latest
+          args: ["rm", "-rf", "/var/lib/mysql/lost+found"]
+          volumeMounts:
+            - name: vpro-db-data
+              mountPath: /var/lib/mysql
+
+

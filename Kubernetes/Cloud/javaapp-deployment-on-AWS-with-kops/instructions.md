@@ -8,20 +8,20 @@
 - Domain Registrar in this case GoDaddy 
 
 1. Linux VM: EC2 service, launch an instance with ubuntu Ami, name: kops, Ubuntu 22.04, t2.micro, create a new key pair, name: kops-key, create. Network settings, edit, create security group, kops-sg, port 22 allowed from my IP, launch instance.
-2. S3 bucket: Create a bucket, region: us-east-1, name: vprofile-kops-state Create Bucket.
+2. S3 bucket: Create a bucket, region: us-east-1, name: `vprofile55-kops-state` Create Bucket.
 3. IAM User: name: kops-admin, Attach policies, select administrator access policy, create.  
 Click on this user, security credentials, generate the access key, Create access key, download the CSV file.
 4. Route 53:create a hosted zone, domain name: kubepro.devopstr.info, create hosted zone. we should get the server's URL. add this entry in our domain registrar.
-5. GoDaddy: add four ns record for four ns server. Now your four records over here for subdomain that points to the name server of Amazon Route 53.
+5. GoDaddy: add four ns record for four ns server. Now your four records  for subdomain that points to the name server of Amazon Route 53.
 
 ### Create cluster 
 
 - log into EC2 instance
 - generate the SSH key which will be used by the cops. `ssh-keygen`
-- install and configure aws cli: `sudo apt update`, `sudo apt install awscli -y`, `aws configure`
-give the access key and secret key, which you have downloaded. Region: `us-east-1`
+- install and configure aws cli: `sudo apt update`, `sudo apt install awscli -y`, `aws --version`, `aws configure`
+give the access key and secret key, which you have downloaded. Region: `us-east-1`, `cat ~/.aws/config`, `cat ~/.aws/credentials`.
 - install and setup kubectl: download Kubectl `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"`we have a kubectl binary. 
-give it executable permission `chmod +x ./kubectl`, move it to usr local bin: `sudo mv kubectl /usr/local/bin/`, `kubectl --help`, kubectl is installed.
+give it executable permission `chmod +x ./kubectl`, move it to usr local bin: `sudo mv kubectl /usr/local/bin/`, `kubectl --help`,  kubectl is installed.
 - install is the kops, `wget https://github.com/kubernetes/kops/releases/download/v1.26.4/kops-linux-amd64`, `chmod +x kops-linux-amd64`, `sudo mv kops-linux-amd64 /usr/local/bin/kops`, `kops version`, verify domain: `nslookup -type=ns kubevpro.devopstr.info`.
 - create configuration for the cluster and store it in the S3 bucket: 
 <kops create cluster --name=kubevpro.devopstr.info \
@@ -41,7 +41,7 @@ give it executable permission `chmod +x ./kubectl`, move it to usr local bin: `s
 ## Create a volume for DB pod
 - to store the MySQL data which gets stored in var lib mySQL into EBS volume.
 - log into kops EC2 instance and create an EBS volume.  
-`aws ec2 create-volume --availability-zone=us-east-1a --size=3 --volumetype=gp2`, grab volume id
+`aws ec2 create-volume --availability-zone=us-east-1a --size=3 --volume-type=gp2`, grab volume id
 - be sure volume and DB pod are same availability zone. Now we have to make sure when we run our DB pod it should be running on a node which is in the same zone, same availability zone, and we can make that through node selector option in our definition file. Node selector works with labels, so we're going to create our own label.
 - `kubectl get nodes --show-labels`
 - create own label: `kubectl get nodes`, check which node is stands on us-east-1a, `kubectl describe node <name of node> | grep us-east-1`, So one node should be good to run our DB pod, but label both the nodes.`kubectl label nodes <name of node> zone=us-east-1a`. for other node `kubectl label nodes <name of node> zone=us-east-1b`.
@@ -64,21 +64,11 @@ go to AWS console, EBS Volumes, find volume you can match it with the volume id,
 - Before we write other definition file, run a test. log into kops EC2 instances, clone repo `https://github.com/yusuf-inci/kubevpro.git`, get into kubevpro, you should have the secret here.
 - create it, `kubectl create -f app-secret.yaml`, `kubectl get secret`, To see the detail information `kubectl describe secret` 
 
-## Definition Files
-# ------------------------------------
-##### DONT FORGET ###### 
-
-#### TO ADD <ebs volume id> TO `vprodbdep.yaml`
-
-#### MERGE TO MAIN
-# --------------------------------------
-
 - Database definition file: name: `vprodbdep.yaml`. to get labels on cluster: `kubectl get nodes --show-labels`
-- after finish writing save, commit and push it.
+- after finish writing save,be sure ADD <ebs volume id>, commit and push it.
 - back into kops EC2 instances, get into kubevpro, pull the code `git pull`,
 - test it, `kubectl create -f vprodbdep.yaml`, `kubectl get deploy`, `kubectl get pod`, To see the detail information `kubectl describe pod <pod name>` 
 - create other definition and service files
-### DONT FORGET MERGE TO MAIN  
 
 ## Provision Stack on K8s Cluster
 - back into kops EC2 instances, get into kubevpro, pull the code `git pull`, check the files then create all definition files in this folder: `kubectl create -f .`, `kubectl get deploy`, `kubectl get pod`, `kubectl get svc`, grab load balancer endpoint, and test it via browser. 
@@ -88,5 +78,5 @@ go to AWS console, EBS Volumes, find volume you can match it with the volume id,
 - go to Route 53, hosted zone, create record, Simple record, name: blog, endpoint: select load balancer, us-east-1, select elb, Define simple record, create record, test it with URL, 
 
 ## Clean up
-- to delete your application, back into kops EC2 instances, get into kubevpro, `kubectl create -f .`
+- to delete your application, back into kops EC2 instances, get into kubevpro, `kubectl delete -f .`
 - delete cluster: `kops delete cluster --name kubevpro.devopstr.info --state=s3://vprofile55-kops-state --yes`

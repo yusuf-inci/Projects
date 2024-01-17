@@ -30,6 +30,6 @@ and connect to vm use `vagrant ssh`, `sudo -i`, `cd /vagrant`.
 - Build images and test it. `docker compose build`, `docker images`, `docker compose up -d`, `docker ps`, grab the ip address `ip addr show`, back your host machine and past it to browser. Back to vm open terminal and login your docker hub account `docker login`, `docker images`, push the images and host them on docker hub.: `docker push <devopstr55/vprofileapp>`, `docker push <devopstr55/vprofiledb>`, `docker push <devopstr55/vprofileweb>` 
 
 ## Clean up  
-- docker stop <container id>  
+- docker stop <container id> or `docker compose down` 
 - to remove stopped containers and related part
-`docker systemprune -a`
+`docker system prune -a`
