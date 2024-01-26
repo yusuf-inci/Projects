@@ -35,3 +35,22 @@ So go to the repository folder and run `git config core.sshCommand "ssh -i ~/.ss
 - testing: make any changes in the file in terraform folders commit and push it. Then check github action on browser.
 - this is all on the staging branch but in real time there will be a staging environment, a testing environment where this code will be applied and tested.
 - We're going to apply that changes when we merge with the main branch. Then changes will be applied to the actual account.
+
+## Main workflow for terraform code
+
+- add steps to apply the Terraform code in the workflow only if there is the change on the main branch. If there is any push on the main branch, then only execute the command Terraform apply.
+- if you want to make any change to infrastructure, simply commit it in the staging branch. merge it to the main branch. main branch is going to apply the changes.In staging branch We are just testing it. We just run Terraform plan, but 
+- in real time. There should be a test environment where it applies all the changes. If those all those works fine then a pull request will be created on GitHub. And the owner of the main branch can approve the pull request if everything gets validated properly. If he or she finds the pull request right reasonable, they will allow the merge. And that should trigger workflow again. And all the changes from the main branch will be applied by the GitHub actions on the cloud.
+
+## Workflow for vprofile app code
+- We have a separate git repository for application code. So we'll create a workflow which is going to fetch the code. Test our code by using Maven, Checkstyle and sonar analysis. Then build the Docker image, upload it to Amazon ECR. Then we are going to build the helm charts, which when we deploy is going to fetch that latest image from ECR and run our application.
+- go to sonar cloud, create new organization project and token and store it on GitHub secrets. Also create new quality gate and assign it to project.
+- we created the ingress controller in the infrastructure workflow. When we create the cluster we created nginx ingress controller. So we can create the ingress rules. update host in the vproingress.yaml with your domain `vprofile.devopstr.info`
+- create the workflow. go to github actions and run workflow manually. if you get error then fix it  
+
+
+
+
+After this, we are going to build the Docker image from the source code and deploy it to the ECS cluster
+
+that we'll see in the next lecture.
