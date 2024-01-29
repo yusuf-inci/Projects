@@ -48,9 +48,26 @@ So go to the repository folder and run `git config core.sshCommand "ssh -i ~/.ss
 - we created the ingress controller in the infrastructure workflow. When we create the cluster we created nginx ingress controller. So we can create the ingress rules. update host in the vproingress.yaml with your domain `vprofile.devopstr.info`
 - create the workflow. go to github actions and run workflow manually. if you get error then fix it  
 
+## Build the Docker image from the source code and deploy it to the ECR
+- our source code has tested. Next step is build the Docker image and upload it to ECR.
+- create another job. it should run after the testing job complete. give needs option otherwise it will execute Parallely with testing job. then check out the source code, To build and upload the image to ECR use ready made actions Docker ECR by Apple boy. 
+- save, commit and push. run workflow. After completed successfully. Check ECR  repository.
 
+# Deploy to EKS
+- deploy Kubernetes definition files.
+- In order to pass the image in the app deployment file (vproappdep.yml) regularly in the workflow with the latest tag, define a variable. create helm charts where we are going to keep all these definition files and mention variables in helm charts. When we apply the helm charts, and those values will be replaced by the variable that we are going to mention over here.
+- Install Helm on ubuntu From the Binary Releases `https://helm.sh/docs/intro/install/` 
+Download your desired version, Unpack it `tar -zxvf helm-v3.0.0-linux-amd64.tar.gz`, Find the helm binary in the unpacked directory, and move it to its desired destination `mv linux-amd64/helm /usr/local/bin/helm`
+- goto your project directory on local machine `cd ~/codes/vprofile-action/`, run `helm create vprofilecharts` It is going to create a folder called Helm Charts and the complete package or complete suit of your application is called as charts, create a folder name it helm and move vprofile charts to helm folder. `ls`, `mkdir helm`, 
+`mv vprofilecharts helm/`, Remove all default templates and copy vprofile charts to templates folder `ls helm/vprofilecharts/templates/`, `rm -rf helm/vprofilecharts/templates/*`, `ls`, `cp kubernetes/vpro-app/* helm/vprofilecharts/templates/`, `ls helm/vprofilecharts/templates/`
+- goto vscode, `/vprofile-action/helm/vprofilecharts/templates/vproappdep.yml` change the image `{{ .Values.appimage}}:{{ .Values.apptag}}` Now we can mention the values of any variable in values.yaml file. But we are not going to do that. We are going to pass it when we run the helm command through the workflow. Back to workflow and add last job.
+- Create `DeploytoEKS` job. So before we deploy our helm charts, we need to have two more steps. One is to generate the kube config file by running AWS command, and the second storing the registry credentials. The Docker registry credentials in Kubernetes. So when the helm charts executes and Kubernetes tries to fetch the image from ECR, it has the authentication. commit, push and run workflow.
+- So go to the load balancers in the same region. find the load balancer that was created by the nginx ingress controller. Copy the DNS name and go to your domain. add a CNAME record. You might need to wait a little longer also. go to browser and test the app.
 
-
-After this, we are going to build the Docker image from the source code and deploy it to the ECS cluster
-
-that we'll see in the next lecture.
+## Clean Up
+1. Remove ingress controller which should delete the load balancer that it created. goto iam, user which you created go to its security credentials and create new access keys CLI.
+- go to your local machine. configure aws cli with new access keys, 
+- remove existing kube config file `rm -rf ~/.kube/config`, get kube config file `aws eks update-kubeconfig --region us-east-2 --name vprofile-eks`, `kubectl get nodes`, in terminal go to your `iac-vprofile` repository and `cat .github/workflows/terraform.yml`, grad the url ` kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.3/deploy/static/provider/aws/deploy.yaml` So this will read the file and delete the ingress controller that was created, including the load balancer.
+- Okay, that got deleted helm list and this is not mandatory. Once delete the Kubernetes cluster everything will be gone with it. But you can uninstall your release by giving like this helm uninstall and the release name. `helm list`, `helm uninstall vprofile-stack`
+- cat to the Terraform workflow file once again. `cat .github/workflows/terraform.yml`, in the terraform folder run following command, before do this it's safe that you download this terraform.tf state file locally. `terraform init -backend-config="bucket=<bucket name(vprofile55)>"` Then run `terraform destroy` That is going to find all the services on that was created and then deleted. everything will be destroyed with this command.
+This will take some time to destroy.
