@@ -1,0 +1,9 @@
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-01e82af4e524a0aa3 # change ami with ami-008fe2fc65df48dac then follow replacement part it should be true at this time. it will delete and recreate resouces. Always aware of recreating in production process. 
+      Tags:
+        - Key: "Name"
+          Value: "change1"

@@ -1,0 +1,39 @@
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-008fe2fc65df48dac # ubuntu 22.04
+      Tags:
+        - Key: "Name"
+          Value: 
+            Fn::Join:
+              - "-"
+              - - "my"
+                - "instance"
+                - "from"
+                - "cloudformation"
+      SecurityGroups:
+        - !Ref VprofileSG
+
+  VprofileSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh & http from MyIP
+      # VpcId: !Ref "AWS::AccountId"  # Use the pseudo parameter for the account's default VPC
+      # VpcId: !ImportValue "DefaultVPCStack-DefaultVPCId"  # Import default VPC ID from another stack
+      # VpcId: !Ref "AWS::EC2::VPC::Id"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 78.183.244.162/32
+      # SecurityGroupEgress:
+        # - IpProtocol: tcp
+          # FromPort: 80
+          # ToPort: 80
+          # CidrIp: 0.0.0.0/0
