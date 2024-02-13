@@ -1,0 +1,45 @@
+Mappings: 
+  AmiRegionMap: # Amazon Linux 2023
+    us-east-1: 
+      "AMI": "ami-0e731c8a588258d0d"
+    us-east-2: 
+      "AMI": "ami-0c20d88b0021158c6"
+    us-west-1: 
+      "AMI": "ami-02d3fd86e6a2f5122"
+    us-west-2: 
+      "AMI": "ami-01e82af4e524a0aa3"
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      # ImageId: { "Fn::FindInMap" : [ "AmiRegionMap", { "Ref" : "AWS::Region" }, "AMI"]},
+      ImageId: !FindInMap
+        - AmiRegionMap
+        - !Ref AWS::Region
+        - AMI
+      Tags:
+        - Key: "Name"
+          Value: 
+            Fn::Join:
+              - "-"
+              - - "my"
+                - "instance"
+                - "from"
+                - "cloudformation"
+      SecurityGroups:
+        - !Ref VprofileSG
+
+  VprofileSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh & http from MyIP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 78.183.244.162/32    
