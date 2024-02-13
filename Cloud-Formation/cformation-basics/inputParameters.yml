@@ -1,0 +1,58 @@
+Parameters:
+  NameOfService: 
+    Description: "The name of the service this stack is to be used for."
+    Type: String
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, or m1.large. Default is t2.micro.
+  KeyName:
+    Description: Name of EC2 login key
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings: 
+  AmiRegionMap: # Amazon Linux 2023
+    us-east-1: 
+      "AMI": "ami-0e731c8a588258d0d"
+    us-east-2: 
+      "AMI": "ami-0c20d88b0021158c6"
+    us-west-1: 
+      "AMI": "ami-02d3fd86e6a2f5122"
+    us-west-2: 
+      "AMI": "ami-01e82af4e524a0aa3"
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceTypeParameter
+      KeyName: !Ref KeyName
+      # ImageId: { "Fn::FindInMap" : [ "AmiRegionMap", { "Ref" : "AWS::Region" }, "AMI"]},
+      ImageId: !FindInMap
+        - AmiRegionMap
+        - !Ref AWS::Region
+        - AMI
+      Tags:
+        - Key: "Name"
+          Value: !Ref NameOfService
+      SecurityGroups:
+        - !Ref VprofileSG
+
+  VprofileSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow ssh & http from MyIP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 78.183.244.162/32    
