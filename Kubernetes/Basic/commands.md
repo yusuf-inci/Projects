@@ -22,7 +22,7 @@
 - get all object: `kubectl get all`
 - create deployment: `kubectl create -f deployment.yaml`, 
 - List deployment: `kubectl get deployments`
-- update deployment: `kubectl apply -f deployment.yaml`
+- update deployment: `kubectl apply -f deployment.yaml`. to record the cause of change: `kubectl apply -f deployment.yaml --record`
 - undo deployment: `kubectl rollout undo deployment/myapp-deployment`
 - `kubectl describe deployment myapp-deployment`
 - get help: `kubectl create deploy --help`
@@ -32,3 +32,8 @@
 1. Recreate Strategy: destroy all and recreate all. App down during process
 2. Rolling Update: destroy and recreate one by one. App never down during process. Default strategy.
 - update image in definition file and run apply command or run kubectl set image command `kubectl set image deployment/myapp-deployment \ nginx-container=nginx:1.9.1` (deployment definition file will not change)
+
+## Service
+- create Service: `kubectl create -f service-definition.yaml`
+- `kubectl get svc`
+- to print service url: `minikube service myapp-service --url`
