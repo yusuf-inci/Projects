@@ -8,7 +8,7 @@ metadata:
 spec:
   containers:
     - name: worker-app 
-      image: kodecloud/examplevotingapp_worker:v1
+      image: dockersamples/examplevotingapp_worker
 # apiVersion: v1
 # kind: Pod
 # metadata:
