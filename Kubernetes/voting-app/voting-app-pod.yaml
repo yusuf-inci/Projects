@@ -7,7 +7,7 @@ metadata:
     app: demo-voting-app
 spec:
   containers:
-  - name: voting-app 
-    image: kodecloud/examplevotingapp_vote:v1
-    ports:
+    - name: voting-app 
+      image: kodekloud/examplevotingapp_vote:v1
+      ports:
       - containerPort: 80
