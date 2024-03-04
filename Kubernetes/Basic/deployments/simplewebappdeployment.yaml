@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-webapp-deployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      name: simple-webapp
+  # strategy:
+    # rollingUpdate:
+      # maxSurge: 25%
+      # maxUnavailable: 25%
+    # type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: simple-webapp
+    spec:
+      containers:
+      - image: kodekloud/simple-webapp:red
+        imagePullPolicy: IfNotPresent
+        name: simple-webapp
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
