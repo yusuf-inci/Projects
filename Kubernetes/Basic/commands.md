@@ -55,4 +55,5 @@
 - `kubectl get pods --namespace=dev`
 - to work directly in dev namespace then run `kubectl config set-context $(kubectl config current-context) --namespace=dev`
 - to get all pods in all namespaces run `kubectl get pods --all-namespaces`
+- `kubectl run redis --image=redis -n dev`
 
