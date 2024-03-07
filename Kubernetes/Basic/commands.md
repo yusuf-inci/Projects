@@ -127,5 +127,17 @@ Or
 
 (This will not use the pods labels as selectors)  
 
-Both the above commands have their own challenges. While one of it cannot accept a selector the other cannot accept a node port. I would recommend going with the kubectl expose command. If you need to specify a node port, generate a definition file using the same command and manually input the nodeport before creating the service.  
+Both the above commands have their own challenges. While one of it cannot accept a selector the other cannot accept a node port. I would recommend going with the kubectl expose command. If you need to specify a node port, generate a definition file using the same command and manually input the nodeport before creating the service.
+
+- Lab  
+`kubectl run nginx-pod --image=nginx:alpine`,  
+`kubectl run redis --image=redis:alpine --labels tier=db --dry-run=client -o yaml > redis.yaml`,  
+`kubectl expose pod redis --port=6379 --name redis-service`,  
+`kubectl expose pod redis --port=6379 --name=redis-service --dry-run=client -o yaml > redis-service.yaml`,  
+`kubectl create deployment webapp --image=kodekloud/webapp-color --replicas=3`,  
+`kubectl run custom-nginx --image=nginx --port=8080`,
+`kubectl create namespace dev-ns`,  
+`kubectl create deployment redis-deploy --image=redis --replicas=2 -n dev-ns`,  
+`kubectl run httpd --image=httpd:alpine --port=80 --expose`,  
+```````````````````````
   
