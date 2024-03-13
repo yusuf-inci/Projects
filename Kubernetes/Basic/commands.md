@@ -139,5 +139,10 @@ Both the above commands have their own challenges. While one of it cannot accept
 `kubectl create namespace dev-ns`,  
 `kubectl create deployment redis-deploy --image=redis --replicas=2 -n dev-ns`,  
 `kubectl run httpd --image=httpd:alpine --port=80 --expose`,  
-```````````````````````
+
+
+## Scheduling
+### Manuel Scheduling
+- if you use create command and want to recreate then run `kubectl replace --force -f manuel-scheduling.yaml` it will delete and create  
+- if you want to monitor the status the run `kubectl get pods --watch` if any update occer then it shows
   
