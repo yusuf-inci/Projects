@@ -143,6 +143,15 @@ Both the above commands have their own challenges. While one of it cannot accept
 
 ## Scheduling
 ### Manuel Scheduling
+- add nodeName to spec --> containers --> nodeName
 - if you use create command and want to recreate then run `kubectl replace --force -f manuel-scheduling.yaml` it will delete and create  
-- if you want to monitor the status the run `kubectl get pods --watch` if any update occer then it shows
-  
+- if you want to monitor the status the run `kubectl get pods --watch` if any update occer then it shows  
+### Labels & Selector  
+- `kubectl get pod --selector env=dev`  
+- `kubectl get all --selector env=prod` , `kubectl get all --selector env=prod --no-headers | wc -l`
+- `kubectl get all --selector env=prod,bu=finance,tier=frontend`  
+### Taints And Tolerations
+- `kubectl taint nodes node-name key=value:taint-effect`, taint effects: NoSchedule | PreferNoSchedule | NoExecute, `kubectl taint nodes node1 app=myapp:NoSchedule`
+- get taints on node01: `kubectl describe node node01 | grep -i taints`  
+- Create a taint on node01 with key of spray, value of mortein and effect of NoSchedule: `kubectl taint nodes node01 spray=mortein:NoSchedule`, 
+- Remove the taint on controlplane, which currently has the taint effect of NoSchedule: `kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-`

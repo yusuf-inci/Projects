@@ -1,0 +1,15 @@
+# Create apod named bee with the nginx image, which has a toleration set to the taint mortein. use following: Image name: nginx, Key: spray, Value: mortein, Effect: NoSchedule
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bee
+spec:
+  containers:
+  - image: nginx
+    name: bee
+  tolerations:
+  - key: "spray"
+    operator: "Equal"
+    value: "mortein"
+    effect: "NoSchedule"
