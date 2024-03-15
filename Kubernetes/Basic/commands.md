@@ -154,4 +154,7 @@ Both the above commands have their own challenges. While one of it cannot accept
 - `kubectl taint nodes node-name key=value:taint-effect`, taint effects: NoSchedule | PreferNoSchedule | NoExecute, `kubectl taint nodes node1 app=myapp:NoSchedule`
 - get taints on node01: `kubectl describe node node01 | grep -i taints`  
 - Create a taint on node01 with key of spray, value of mortein and effect of NoSchedule: `kubectl taint nodes node01 spray=mortein:NoSchedule`, 
-- Remove the taint on controlplane, which currently has the taint effect of NoSchedule: `kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-`
+- Remove the taint on controlplane, which currently has the taint effect of NoSchedule: `kubectl taint nodes controlplane node-role.kubernetes.io/control-plane:NoSchedule-`  
+### Node Affinity LAB
+- add label to a node: `kubectl label node node01 color=red`
+- to check the taints on nodes: `kubectl describe node node01 | grep -i taints`
