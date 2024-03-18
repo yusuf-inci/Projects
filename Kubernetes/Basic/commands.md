@@ -161,4 +161,8 @@ Both the above commands have their own challenges. While one of it cannot accept
 - `kubectl create deployment red --image=nginx --replicas=2 --dry-run=client -o yaml > red.yaml`
 ### Resource Limits
 - to get the output every two seconds: `watch kubectl get pods`, `watch kubectl describe pod elephant`
-- 
+### DeamonSet  
+- `kubectl get daemonsets`
+- `kubectl get daemonsets --all-namespaces` or `kubectl get daemonsets -A`
+- `kubectl describe daemonsets monitoring-daemon`
+- An easy way to create a DaemonSet is to first generate a YAML file for a Deployment with the command `kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml` Next, remove the replicas, strategy and status fields from the YAML file using a text editor. Also, change the kind from Deployment to DaemonSet. Finally, create the Daemonset by running `kubectl create -f fluentd.yaml`
