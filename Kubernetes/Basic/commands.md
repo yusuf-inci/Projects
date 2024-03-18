@@ -158,3 +158,7 @@ Both the above commands have their own challenges. While one of it cannot accept
 ### Node Affinity LAB
 - add label to a node: `kubectl label node node01 color=red`
 - to check the taints on nodes: `kubectl describe node node01 | grep -i taints`
+- `kubectl create deployment red --image=nginx --replicas=2 --dry-run=client -o yaml > red.yaml`
+### Resource Limits
+- to get the output every two seconds: `watch kubectl get pods`, `watch kubectl describe pod elephant`
+- 
