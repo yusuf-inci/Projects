@@ -10,7 +10,7 @@ spec:
     metadata:
       labels:
         app: monitoring-agent
-  spec:
+    spec:
     containers:
     - name: monitoring-agent
     image: monitoring-agent
