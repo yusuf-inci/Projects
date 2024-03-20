@@ -165,4 +165,7 @@ Both the above commands have their own challenges. While one of it cannot accept
 - `kubectl get daemonsets`
 - `kubectl get daemonsets --all-namespaces` or `kubectl get daemonsets -A`
 - `kubectl describe daemonsets monitoring-daemon`
-- An easy way to create a DaemonSet is to first generate a YAML file for a Deployment with the command `kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml` Next, remove the replicas, strategy and status fields from the YAML file using a text editor. Also, change the kind from Deployment to DaemonSet. Finally, create the Daemonset by running `kubectl create -f fluentd.yaml`
+- An easy way to create a DaemonSet is to first generate a YAML file for a Deployment with the command `kubectl create deployment elasticsearch --image=registry.k8s.io/fluentd-elasticsearch:1.20 -n kube-system --dry-run=client -o yaml > fluentd.yaml` Next, remove the replicas, strategy and status fields from the YAML file using a text editor. Also, change the kind from Deployment to DaemonSet. Finally, create the Daemonset by running `kubectl create -f fluentd.yaml`  
+### Static PODs
+- to figure out static pods exist in the cluster in all namespaces, Run the command `kubectl get pods --all-namespaces` and look for those with -controlplane appended in the name  
+- Create a static pod named static-busybox that uses the busybox image and the command sleep 1000 ==> Create a pod definition file in the manifests folder. To do this, run the command: `kubectl run --restart=Never --image=busybox static-busybox --dry-run=client -o yaml --command -- sleep 1000 > /etc/kubernetes/manifests/static-busybox.yaml`
