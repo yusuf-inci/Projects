@@ -172,7 +172,16 @@ Both the above commands have their own challenges. While one of it cannot accept
 ### MULTIPLE SCHEDULERS  
 - Deploy Additional Scheduler - kubeadm: ref: `/etc/kubernetes/manifests/kube-scheduler.yaml` and `my-custom-scheduler.yaml`,
 - View Schedulers: `kubectl get pods --namespace=kube-system`
+- Inspect the kubernetes scheduler pod and identify the image: `kubectl describe pod kube-scheduler-controlplane --namespace=kube-system`
 - Use Custom Scheduler: `kubectl get pods --namespace=kube-system`
 - View Events: `kubectl get events`
 - View Scheduler Logs: `kubectl logs my-custom-scheduler --name-space=kube-system`
 - Deploy Additional Scheduler - kubeadm: ref:`/etc/kubernetes/manifests/kube-scheduler.yaml` and `my-custom-scheduler.yaml`
+
+## Application Lifecycle Management
+### Rolling Updates and Rollbacks
+- Create: `kubectl create –f deployment-definition.yml`
+- Get: `kubectl get deployments`
+- Update: `kubectl apply –f deployment-definition.yml` or `kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1`
+- Status: `kubectl rollout status deployment/myapp-deployment` or `kubectl rollout history deployment/myapp-deployment`
+- Rollback: `kubectl rollout undo deployment/myapp-deployment`
