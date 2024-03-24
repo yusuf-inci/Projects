@@ -186,4 +186,4 @@ Both the above commands have their own challenges. While one of it cannot accept
 - Status: `kubectl rollout status deployment/myapp-deployment` or `kubectl rollout history deployment/myapp-deployment`
 - Rollback: `kubectl rollout undo deployment/myapp-deployment`
 ### Application Commands
--
+- `kubectl create –f pod-definition.yml`,  `ENTRYPOINT [“sleep”]` ==> `command:[“sleep2.0”]`, `CMD [“5”]` ==> `args:[“10”]`
