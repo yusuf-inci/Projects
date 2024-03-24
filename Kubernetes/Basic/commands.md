@@ -185,3 +185,5 @@ Both the above commands have their own challenges. While one of it cannot accept
 - Update: `kubectl apply –f deployment-definition.yml` or `kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1`
 - Status: `kubectl rollout status deployment/myapp-deployment` or `kubectl rollout history deployment/myapp-deployment`
 - Rollback: `kubectl rollout undo deployment/myapp-deployment`
+### Application Commands
+-
