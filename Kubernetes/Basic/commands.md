@@ -187,3 +187,25 @@ Both the above commands have their own challenges. While one of it cannot accept
 - Rollback: `kubectl rollout undo deployment/myapp-deployment`
 ### Application Commands
 - `kubectl create –f pod-definition.yml`,  `ENTRYPOINT [“sleep”]` ==> `command:[“sleep2.0”]`, `CMD [“5”]` ==> `args:[“10”]`
+### Environment Variables
+1. app.py (color = os.environ.get('APP_COLOR')) ==> `export APP_COLOR=blue; python app.py`
+2.  ENV Variables in Docker: `docker run simple-webapp-color`, `docker run -e APP_COLOR=blue
+simple-webapp-color`, 
+3. ENV Variables in Kubernetes:  
+- `docker run -e APP_COLOR=pink simple-webapp-color` 
+- env-var-pod-definition.yaml
+- Plain Key Value:  
+env:
+    - name: APP_COLOR
+      value: pink   
+- ConfigMap
+env:
+    - name: APP_COLOR
+      valueFrom:
+        configMapKeyRef: 
+- Secrets  
+env:
+    - name: APP_COLOR
+      valueFrom:
+        secretKeyRef:
+      ````````
