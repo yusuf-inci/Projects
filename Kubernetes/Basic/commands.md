@@ -214,3 +214,11 @@ app-config --from-literal=APP_COLOR=blue \
 --from-literal=APP_MOD=prod`, `kubectl create configmap <config-name> --from-file=<path-to-file>`, `kubectl create configmap \
 app-config --from-file=app_config.properties`, 
 - Declarative: `kubectl create –f config-map.yaml`, `kubectl get configmaps`, `kubectl create –f ConfigMapinPods.yaml`
+### Secrets
+- Imperative: 
+1. `kubectl create secret generic <secret-name> --from-literal=<key>=<value>`, `kubectl create secret generic app-secret --from-literal=DB_Host=mysql --from-literal=DB_User=root --from-literal=DB_Password=paswrd` , 
+2. `kubectl create secret generic <secret-name> --from-file=<path-to-file>`, `kubectl create secret generic app-secret --from-file=app_secret.properties`  
+- Declarative: `kubectl create –f secret-data.yaml`  
+Encode Secrets ==> `echo –n ‘mysql’ | base64`  
+View Secrets: `kubectl get secrets`, `kubectl describe secrets`, `kubectl get secret app-secret –o yaml`  
+Decode Secrets: `echo –n ‘bXlzcWw=’ | base64 --decode`
