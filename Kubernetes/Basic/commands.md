@@ -228,5 +228,6 @@ You may need two services to work together, such as a web server and a logging s
 - `kubectl run yellow --image=busybox --dry-run=client -o yaml > multicontainer-yellow.yaml`, `kubectl apply -f multicontainer-yellow.yaml`, 
 - `kubectl -n elastic-stack exec -it app -- cat /log/app.log` or
 - `kubectl -n elastic-stack logs app`
-``
-``
+
+###  initContainers  
+- An initContainer is configured in a pod like all other containers, except that it is specified inside a initContainers section. A process that pulls a code or binary from a repository that will be used by the main web application. That is a task that will be run only  one time when the pod is first created. Or a process that waits  for an external service or database to be up before the actual application starts. When a POD is first created the initContainer is run, and the process in the initContainer must run to a completion before the real container hosting the application starts. You can configure multiple such initContainers as well. In that case each init container is run one at a time in sequential order.
