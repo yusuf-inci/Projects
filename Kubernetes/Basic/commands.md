@@ -222,3 +222,6 @@ app-config --from-file=app_config.properties`,
 Encode Secrets ==> `echo –n ‘mysql’ | base64`  
 View Secrets: `kubectl get secrets`, `kubectl describe secrets`, `kubectl get secret app-secret –o yaml`  
 Decode Secrets: `echo –n ‘bXlzcWw=’ | base64 --decode`
+
+### Multi-Container PODs  
+You may need two services to work together, such as a web server and a logging service. You need one agent instance per web server instance paired together. You only need the two functionality to work together. You need one agent per web server instance paired together that can scale up and down together and that is why you have multi container pods that share the same life cycle, which means they are created together and destroyed together. They share the same network space, which means they can refer to each other as local host, and they have access to the same storage volumes. This way you do not have to establish volume sharing or services between the pods to enable communication between them. To create a multi-container pod, add the new container information to the pod definition file.
