@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: yellow
+  name: yellow
+spec:
+  containers:
+  - image: busybox
+    name: lemon
+    resources: {}
+    command: ["sleep","1000"]
+  - image: redis
+    name: gold
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
