@@ -246,10 +246,58 @@ You may need two services to work together, such as a web server and a logging s
 - The components can be at different release versions. Since the kube-apiserver is the primary component in the control plane, and that is the component that all other components talk to, none of the other components should ever be at a version higher than the kube-apiserver. The controller-manager and scheduler can be at one version lower. Except for others The kubectl utility could be at a version higher than the API server or the same version as the API server or a version lower than the API server.
 - You should upgrade one minor version one. (v.1.10 >> v.1.11). You should upgrade before three version release So with 1.12 being the latest release, Kubernetes supports versions 1.12, 1.11, and 1.10. So when 1.13 is released, only versions 1.13, 1.12, and 1.11 are supported. Before the release of 1.13 would be a good time to upgrade your cluster to the next release. The recommended approach is to upgrade one minor version at a time, version 1.10 to 1.11, then 1.11 to 1.12, and then 1.12 to 1.13.
 - Upgrading a cluster involves two major steps. First, you upgrade your master nodes and then upgrade the worker nodes. While the master is being upgraded, the control plane components, such as the API server, scheduler, and controller-managers, go down briefly. The master going down does not mean your worker nodes and applications on the cluster are impacted. All workloads hosted on the worker nodes continue to serve users as normal. Since the master is down, all management functions are down. You cannot access the cluster using kubectl or other Kubernetes API. You cannot deploy new applications or delete or modify existing ones. The controller-managers don't function either. If a pod was to fail, a new pod won't be automatically created. But as long as the nodes and the pods are up, your applications should be up, and users will not be impacted. Once the upgrade is complete and the cluster is back up, it should function normally.
-2. Example: upgrade the cluster from 1.11 to 1.13
+2. Example 1: upgrade the cluster from 1.11 to 1.13
 - Start with Master Node
 - `kubeadm upgrade plan`, first upgrade kubeadm tools:  `apt-get upgrade -y kubeadm=1.12.0-00` then `kubeadm upgrade apply v1.12.0`, `kubectl get nodes`, If you run the kubectl get nodes command, you will still see the master node at 1.11. This is because in the output of this command, it is showing the versions of kubelets on each of these nodes registered with the API server and not the version of the API server itself. So the next step is to upgrade the kubelets.`apt-get upgrade -y kubelet=1.12.0-00`,`systemctl restart kubelet`. Running the kubectl get nodes command now shows that the master has been upgraded to 1.12. The worker nodes are still at 1.11.
 - So next, the worker nodes. in this case use one at a time strategy.
 - We need to first move the workloads from the first worker node to the other nodes. `kubectl drain node-1` The kubectl drain command lets you safely terminate all the pods from a node and reschedules them on the other nodes. it also cordons the node and marks it  unschedulable. That way, no new pods are scheduled on it. Then upgrade the kubeadm and kubelet packages on the worker nodes as we did on the master node. `apt-get upgrade -y kubeadm=1.12.0-00`, `apt-get upgrade -y kubelet=1.12.0-00`, `kubeadm upgrade node config --kubelet-version v1.12.0`, `systemctl restart kubelet`, The node should now be up with the new software version. However, when we drain the node, we actually marked it unschedulable,
 so we need to unmark it by running the command `kubectl uncordon node-1` The node is now schedulable. But remember that it is not necessary that the pods come right back to this node. It is only marked as schedulable. Only when the pods are deleted from the other nodes
 or when new pods are scheduled do they really come back to this first node. Well, it will soon come when we take down the second node to perform the same steps to upgrade it, and finally, the third node. We now have all nodes upgraded.
+3. Example: 2
+- `kubectl get nodes`
+NAME           STATUS   ROLES           AGE   VERSION
+controlplane   Ready    control-plane   34m   v1.28.0
+node01         Ready    <none>          33m   v1.28.0
+- controlplane ~ ➜  `kubectl describe nodes controlplane | grep -i taints`
+Taints:             <none>
+- controlplane ~ ✖ `kubectl describe nodes node01 | grep -i taint`
+Taints:             <none>
+-  `kubectl get deploy`
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+blue   5/5     5            5           6m37s
+- controlplane ~ ➜  `kubectl get pods -o wide`
+NAME                    READY   STATUS    RESTARTS   AGE     IP           NODE           NOMINATED NODE   READINESS GATES
+blue-667bf6b9f9-69r65   1/1     Running   0          7m22s   10.244.1.4   node01         <none>           <none>
+blue-667bf6b9f9-7jd97   1/1     Running   0          7m22s   10.244.0.4   controlplane   <none>           <none>
+blue-667bf6b9f9-7s495   1/1     Running   0          7m22s   10.244.1.2   node01         <none>           <none>
+blue-667bf6b9f9-8j86l   1/1     Running   0          7m22s   10.244.0.5   controlplane   <none>           <none>
+blue-667bf6b9f9-z9t7j   1/1     Running   0          7m22s   10.244.1.3   node01         <none>           <none>
+- `kubeadm upgrade plan`
+- `kubectl drain controlplane --ignore-daemonsets`
+- controlplane ~ ➜  `kubectl get pods -o wide`
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE     NOMINATED NODE   READINESS GATES
+blue-667bf6b9f9-4p6nq   1/1     Running   0          22s   10.244.1.8   node01   <none>           <none>
+blue-667bf6b9f9-69r65   1/1     Running   0          11m   10.244.1.4   node01   <none>           <none>
+blue-667bf6b9f9-7s495   1/1     Running   0          11m   10.244.1.2   node01   <none>           <none>
+blue-667bf6b9f9-jpg54   1/1     Running   0          21s   10.244.1.9   node01   <none>           <none>
+blue-667bf6b9f9-z9t7j   1/1     Running   0          11m   10.244.1.3   node01   <none>           <none>
+- Use any text editor you prefer to open the file that defines the Kubernetes apt repository. `vim /etc/apt/sources.list.d/kubernetes.list`
+Update the version in the URL to the next available minor release, i.e v1.29.
+`deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /`.  After making changes, save the file and exit from your text editor. `apt update`, `apt-cache madison kubeadm`, Based on the version information displayed by apt-cache madison, it indicates that for Kubernetes version 1.29.0, the available package version is 1.29.0-1.1. Therefore, to install kubeadm for Kubernetes v1.29.0, use the following command:  `apt-get install kubeadm=1.29.0-1.1` 
+Run the following command to upgrade the Kubernetes cluster. `kubeadm upgrade plan v1.29.0`, `kubeadm upgrade apply v1.29.0`. Now, upgrade the version and restart Kubelet. Also, mark the node (in this case, the "controlplane" node) as schedulable.
+root@controlplane:~# `apt-get install kubelet=1.29.0-1.1`
+root@controlplane:~# `systemctl daemon-reload`
+root@controlplane:~# `systemctl restart kubelet`
+root@controlplane:~# `kubectl uncordon controlplane`
+- controlplane ~ ➜  `kubectl drain node01 --ignore-daemonsets`
+- On the node01 node, run the following commands: Use any text editor you prefer to open the file that defines the Kubernetes apt repository.  `vim /etc/apt/sources.list.d/kubernetes.list` Update the version in the URL to the next available minor release, i.e v1.29. `deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /` After making changes, save the file and exit from your text editor. Proceed with the next instruction.
+root@node01:~# `apt update`
+root@node01:~# `apt-cache madison kubeadm`
+Based on the version information displayed by apt-cache madison, it indicates that for Kubernetes version 1.29.0, the available package version is 1.29.0-1.1. Therefore, to install kubeadm for Kubernetes v1.29.0, use the following command:
+root@node01:~# `apt-get install kubeadm=1.29.0-1.1`
+Upgrade the node : root@node01:~# `kubeadm upgrade node`
+Now, upgrade the version and restart Kubelet.
+root@node01:~# `apt-get install kubelet=1.29.0-1.1`
+root@node01:~# `systemctl daemon-reload`
+root@node01:~# `systemctl restart kubelet`
+- controlplane ~ ➜  `kubectl uncordon node01`
