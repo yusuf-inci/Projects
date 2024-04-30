@@ -301,3 +301,18 @@ root@node01:~# `apt-get install kubelet=1.29.0-1.1`
 root@node01:~# `systemctl daemon-reload`
 root@node01:~# `systemctl restart kubelet`
 - controlplane ~ ➜  `kubectl uncordon node01`
+
+## Backup and Restore
+### Resource Configuration
+- Source code Management, github etc.
+- kube-apiserver: `kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml`
+### ETCD Cluster
+- to get the version of ETCD running on the cluster: `kubectl get pods -n kube-system`,`kubectl describe pod etcd-controlplane -n kube-system` then find the container image, or `kubectl -n kube-system logs etcd-controlplane | grep -i 'etcd-version'` or `kubectl -n kube-system describe pod etcd-controlplane | grep Image:`
+- to reach the ETCD cluster from the controlplane node: `kubectl -n kube-system describe pod etcd-controlplane | grep '\--listen-client-urls'`
+-  ETCD server certificate file located at `kubectl describe pod etcd-controlplane  -n kube-system` and look for the value for --cert-file or `kubectl -n kube-system describe pod etcd-controlplane | grep '\--cert-file'`
+-  ETCD CA Certificate file located at `kubectl -n kube-system describe pod etcd-controlplane | grep '\--trusted-ca-file'`
+- etcd is a static pod so definition file is at `vim /etc/kubernetes/manifests/etcd.yaml` examine this file
+
+
+
+### Persistent Volumes
