@@ -307,6 +307,8 @@ root@node01:~# `systemctl restart kubelet`
 - Source code Management, github etc.
 - kube-apiserver: `kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml`
 ### ETCD Cluster
+#### Back up and restore Stacked ETCD
+- to view all cluster: `kubectl config view`
 - to get the version of ETCD running on the cluster: `kubectl get pods -n kube-system`,`kubectl describe pod etcd-controlplane -n kube-system` then find the container image, or `kubectl -n kube-system logs etcd-controlplane | grep -i 'etcd-version'` or `kubectl -n kube-system describe pod etcd-controlplane | grep Image:`
 - to reach the ETCD cluster from the controlplane node: `kubectl -n kube-system describe pod etcd-controlplane | grep '\--listen-client-urls'`
 -  ETCD server certificate file located at `kubectl describe pod etcd-controlplane  -n kube-system` and look for the value for --cert-file or `kubectl -n kube-system describe pod etcd-controlplane | grep '\--cert-file'`
@@ -362,6 +364,26 @@ Note 3: This is the simplest way to make sure that ETCD uses the restored data a
 
 
 If you do change --data-dir to /var/lib/etcd-from-backup in the ETCD YAML file, make sure that the volumeMounts for etcd-data is updated as well, with the mountPath pointing to /var/lib/etcd-from-backup (THIS COMPLETE STEP IS OPTIONAL AND NEED NOT BE DONE FOR COMPLETING THE RESTORE)
+#### Restore External ETCD
+- An ETCD backup for cluster2 is stored at /opt/cluster2.db. Use this snapshot file to carryout a restore on cluster2 to a new path /var/lib/etcd-data-new.
+`student-node ~ ➜  kubectl config use-context cluster2`, Copy the snapshot file from the student-node to the etcd-server. student-node ~  `scp /opt/cluster2.db etcd-server:/root`. Restore the snapshot on the cluster2. Since we are restoring directly on the etcd-server, we can use the endpoint https:/127.0.0.1. Use the same certificates that were identified earlier. Make sure to use the data-dir as /var/lib/etcd-data-new: etcd-server ~ ➜  `ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/etcd/pki/ca.pem --cert=/etc/etcd/pki/etcd.pem --key=/etc/etcd/pki/etcd-key.pem snapshot restore /root/cluster2.db --data-dir /var/lib/etcd-data-new`. Update the systemd service unit file for etcdby running vi /etc/systemd/system/etcd.service and add the new value for data-dir:
+[Unit]
+Description=etcd key-value store
+Documentation=https://github.com/etcd-io/etcd
+After=network.target
+
+[Service]
+User=etcd
+Type=notify
+ExecStart=/usr/local/bin/etcd \
+  --name etcd-server \
+  --data-dir=/var/lib/etcd-data-new \  make sure the permissions on the new directory is correct (should be owned by etcd user): etcd-server /var/lib ➜  `chown -R etcd:etcd /var/lib/etcd-data-new`
+ Once the restore is complete, ensure that the controlplane components on cluster2 are running. Finally, reload and restart the etcd service.
+etcd-server ~/default.etcd ➜  `systemctl daemon-reload`
+etcd-server ~ ➜  `systemctl restart etcd`
+It is recommended to restart controlplane components (e.g. kube-scheduler, kube-controller-manager, kubelet) to ensure that they don't rely on some stale data.
+`kubectl delete pods kube-controller-manager-cluster2-controlplane kube-scheduler-cluster2-controlplane -n kube-system`, ssh to conrol plane `ssh cluster2-controlplane`, restart kubelet `systemctl restart kubelet`
+
 
 
 ### Persistent Volumes
