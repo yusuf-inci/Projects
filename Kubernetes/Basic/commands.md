@@ -387,3 +387,36 @@ It is recommended to restart controlplane components (e.g. kube-scheduler, kube-
 
 
 ### Persistent Volumes
+
+## SECURITY
+
+### Secure Hosts: 
+- Password based authentication disabled,  
+- SSH Key based authentication
+
+### Secure Kubernetes:
+1. Authentication: (Who can access?)
+- Files – Username and Passwords
+- Files – Username and Tokens
+- Certificates
+- External Authentication providers - LDAP
+- Service Accounts
+2. Authorization (What can they do?)
+- RBAC Authorization
+- ABAC Authorization
+- Node Authorization
+- Webhook Mode 
+
+### TLS CERTIFICATES
+1. Server Certificates for Servers
+- KUBE-API SERVER: apiserver.crt --- apiserver.key 
+- ETCD SERVER: etcdserver.crt --- etcdserver.key
+- KUBELET SERVER: kubelet.crt --- kubelet.key
+2. Client Certificates for Clients
+- KUBE-API SERVER: 
+- ETCD SERVER: apiserver-etcd-client.crt --- apiserver-etcd-client.key
+- KUBELET SERVER: kubelet-client.crt --- kubelet-client.key
+- admin: admin.crt --- admin.key
+- KUBE-SCHEDULER: scheduler.crt --- scheduler.key
+- KUBE-CONTROLLER-MANAGER: controller-manager.crt --- controller-manager.key
+- KUBE-PROXY: kube-proxy.crt --- kube-proxy.key
