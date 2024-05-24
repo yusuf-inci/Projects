@@ -420,3 +420,5 @@ It is recommended to restart controlplane components (e.g. kube-scheduler, kube-
 - KUBE-SCHEDULER: scheduler.crt --- scheduler.key
 - KUBE-CONTROLLER-MANAGER: controller-manager.crt --- controller-manager.key
 - KUBE-PROXY: kube-proxy.crt --- kube-proxy.key
+
+#### Generate Certificates
